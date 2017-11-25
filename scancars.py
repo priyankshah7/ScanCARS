@@ -127,7 +127,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def event_date(self):
         self.EventLogger_box.appendPlainText(
             '------------------------------------------------------------------------------------')
-        self.EventLogger_box.appendPlainText('Date: ' + time.strftime('%d/%m/%Y'))
+        self.EventLogger_box.appendPlainText(
+            ' ScanCARS Software                                   Date: ' + time.strftime('%d/%m/%Y'))
         self.EventLogger_box.appendPlainText(
             '------------------------------------------------------------------------------------')
 
