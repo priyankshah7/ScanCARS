@@ -12,6 +12,8 @@ import tkinter.filedialog
 tkinter.Tk().withdraw()
 
 from GUIWindows import WindowMAIN
+from ADwinSDK import ADwin
+from AndorSDK.Camera import andor
 
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
@@ -21,6 +23,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO Add a function to disable relevant buttons until camera has been cooled
+        # TODO Change textboxes to spin boxes where relevant
 
         self.event_date()
 
@@ -103,7 +106,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     def spectralacq_start(self):
         time_req = float(self.SpectralAcq_update_time.text())
-        darkfield = int(self.SpectralAcq_darkfield.text())
+        darkfield_req = int(self.SpectralAcq_darkfield.text())
 
     # HyperAcq: defining functions
     def hyperacq_start(self):
@@ -115,7 +118,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         zstep = float(self.HyperAcq_zstep.text())
 
         time_req = float(self.HyperAcq_time_req.text())
-        darkfield = int(self.HyperAcq_darkfield.text())
+        darkfield_req = int(self.HyperAcq_darkfield.text())
 
     # Status: defining status and eventlog functions
     def status(self, message):
