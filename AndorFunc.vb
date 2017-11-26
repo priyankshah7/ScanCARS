@@ -2,7 +2,7 @@ Imports Microsoft.VisualBasic
 Imports ADwin.Driver
 
 Public Class Andor
-    Public Function initialise()
+    Public Function sc_initialise()
         Dim errorValue_Initialize As String = Initialize("")
         Select Case (errorValue_Initialize)
             Case DRV_SUCCESS
@@ -81,12 +81,31 @@ Public Class Andor
 
     End Function
     
-    Public Function temp_cooler_on()
+    Public Function sc_coolerON()
         Dim errorValue As String = GetTemperatureRange(mintemp, maxtemp)
         If errorValue <> DRV_SUCCESS Then
             Exit Sub
         End If
         
     End Function
+    
+    Public Function sc_coolerOFF()
+    End Function
+    
+    Public Function sc_spec_acquire()
+    End Function
+    
+    Public Function sc_hsi_acquire()
+    End Function
+    
+    Public Function sc_updatetime_acq()
+    End Function
+    
+    Public Function sc_updatetracks()
+    End Function
+    
+    Public Function sc_displaytracks()
+    End Function
+    
 
 End Class
