@@ -84,6 +84,67 @@ class Andor:
         else:
             return 'Andor: error. Unknown error.'
 
+    def CoolerON(self):
+        error = self.dll.CoolerON()
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            return 'Andor: Cooler on.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: CoolerOn error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: CoolerOn error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: CoolerOn error. Unable to communicate with card.'
+
+    def CoolerOFF(self):
+        error = self.dll.CoolerOFF()
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            return 'Andor: Temperature controller switched OFF.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: CoolerOFF error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: CoolerOFF error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: CoolerOFF error. Unable to communicate with card.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_SUPPORTED':
+            return 'Andor: CoolerOFF error. Camera does not support switching cooler off.'
+
+    def SetTemperature(self, temp):
+        """
+        :param temp:
+        :return: error message(string)
+
+        This function will set the desired temperature of the detector. To turn
+        cooling ON and OFF use the CoolerON and CoolerOFF functions
+        """
+        error = self.dll.SetTemperature(temp)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetTemperature error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetTemperature error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: SetTemperature error. Unable to communicate with card.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetTemperature error. Temperature invalid.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_SUPPORTED':
+            return 'Andor: SetTemperature error. The camera does not support setting the temperature.'
+
     def ShutDown(self):
         error = self.dll.ShutDown()
 
@@ -112,11 +173,11 @@ class Andor:
             return 'Andor: SetReadMode error. Invalid readout mode passed.'
 
     def SetAcquisitionMode(self, mode):
-        # 0: Single Scan
-        # 1: Accumulate
-        # 2: Kinetics
-        # 3: Fast Kinetics
-        # 4: Run till abort
+        # 1: Single Scan
+        # 2: Accumulate
+        # 3: Kinetics
+        # 4: Fast Kinetics
+        # 5: Run till abort
 
         error = self.dll.SetAcquisitionMode(mode)
 
@@ -177,4 +238,181 @@ class Andor:
 
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: SetNumberAccumulations error. Number of accumulates.'
+
+    def SetAccumulationCycleTime(self, time):
+        """
+        :param time:
+        :return error message(string):
+
+        This function will set the accumulation cycle time to the nearest
+        valid value not less than the given value. The actual cycle time used is
+        obtained by GetAcquisitionTimings.
+        """
+        error = self.dll.SetAccumulationCycleTime(time)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetAccumulationCycleTime error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetAccumulationCycleTime error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetAccumulationCycleTime error. Exposure time invalid.'
+
+    def SetKineticCycleTime(self, time):
+        """
+        :param time:
+        :return error message(string):
+
+         This function will set the kinetic cycle time to the nearest valid value
+         not less than the given value. The actual time used is obtained
+         by GetAcquisitionTimings.
+        """
+        error = self.dll.SetKineticCycleTime(time)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetKineticCycleTime error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetKineticCycleTime error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetKineticCycleTime error. Time invalid.'
+
+    def SetShutter(self, type, mode, closingtime, openingtime):
+        """
+        :param type:
+        :param mode:
+        :param closingtime:
+        :param openingtime:
+        :return: error message(string)
+
+        This function controls the behaviour of the shutter.
+
+        int type:
+            0: Output TTL low signal to open shutter
+            1: Output TTL high signal to open shutter
+
+        int mode:
+            0: Fully auto
+            1: Permanently open
+            2: Permanently closed
+            3: Open for FVB series
+            4: Open for any series
+
+        int closingtime:
+            Time shutter takes to close (ms)
+
+        int openingtime
+            Time shutter takes to open (ms)
+        """
+        error = self.dll.SetShutter(type, mode, closingtime, openingtime)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetShutter error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetShutter error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: SetShutter error. Unable to communicate with card.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_SUPPORTED':
+            return 'Andor: SetShutter error. Camera does not support shutter control'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetShutter error. Invalid TTL type.'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: SetShutter error. Invalid mode.'
+
+        elif ERROR_CODE[error] == 'DRV_P3INVALID':
+            return 'Andor: SetShutter error. Invalid time to open.'
+
+        elif ERROR_CODE[error] == 'DRV_P4INVALID':
+            return 'Andor: SetShutter error. Invalid time to close.'
+
+    def StartAcquisition(self):
+        """
+        :return error message(string):
+
+        This function starts an acquisition. The status of the acquisition can
+        be monitored via GetStatus().
+        """
+        error = self.dll.StartAcquisition()
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: StartAcquisition error. System not initialized'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: StartAcquisition error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_VXDNOTINSTALLED':
+            return 'Andor: StartAcquisition error. VxD not loaded.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: StartAcquisition error. Unable to communicate with card.'
+
+        elif ERROR_CODE[error] == 'DRV_INIERROR':
+            return 'Andor: StartAcquisition error. Error reading DETECTOR.INI'
+
+        elif ERROR_CODE[error] == 'DRV_ACQERROR':
+            return 'Andor: StartAcquisition error. Acquisition settings invalid.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_PAGELOCK':
+            return 'Andor: StartAcquisition error. Unable to allocate memory.'
+
+        elif ERROR_CODE[error] == 'DRV_INVALID_FILTER':
+            return 'Andor: StartAcquisition error. Filter not available for current acquisition'
+
+        elif ERROR_CODE[error] == 'DRV_BINNING_ERROR':
+            return 'Andor: StartAcquisition error. Range not multiple of horizontal binning.'
+
+        elif ERROR_CODE[error] == 'DRV_SPOOLSETUPERROR':
+            return 'Andor: StartAcquisition error. Error with spool settings.'
+
+    def GetAcquiredData(self, imageArray):
+        """
+        :param imageArray:
+        :return:
+
+        This function will return the data from the last acquisition. The data
+        are returned as long integers (32bit signed integers). The array must
+        be large enough
+        """
+
+    def SetExposureTime(self, time):
+        """
+        :param time:
+        :return error message(string):
+
+        This function will set the exposure time to the nearest valid value not
+        less than the given value. The actual exposure time is obtained by
+        GetAcquisitionTimings().
+        """
+        error = self.dll.SetExposureTime(c_float(time))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetExposureTime error. System not initalized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetExposureTime error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetExposureTime error. Exposure time invalid.'
 
