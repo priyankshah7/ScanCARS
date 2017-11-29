@@ -509,6 +509,45 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_P2INVALID':
             return 'Andor: GetNumberHSSpeeds error. Invalid horizontal read mode.'
 
+    def GetHSSpeed(self, channel, type, index):
+        """
+        :param channel:
+        :param type:
+        :param index:
+        :return error message(string):
+
+        As your Andor system is capable of operating at more than one horizontal shift
+        speed this function will return the actual speeds available. The value
+        returned is in MHz.
+
+        int channel
+            the AD channel
+
+        int type
+            0: electron multiplication
+            1: conventional
+
+        int index
+            values that it can take are between 0 and HSSpeed-1
+        """
+        HSSpeed = c_float()
+
+        error = self.dll.GetHSSpeed(channel, type, index, byref(HSSpeed))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetHSSpeed error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetHSSpeed error. Invalid channel.'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: GetHSSpeed error. Invalid horizontal read mode.'
+
+        elif ERROR_CODE[error] == 'DRV_P3INVALID':
+            return 'Andor: GetHSSpeed error. Invalid index.'
 
 
 
