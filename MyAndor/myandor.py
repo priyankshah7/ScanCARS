@@ -18,6 +18,7 @@ class Andor:
         error = self.dll.ShutDown()
 
     # TODO Not including EMCCD functions just yet. Will do so only if required.
+    # TODO There are some functions which have additional returns that need to be coded
 
     def Initialize(self):
         tekst = c_char()
@@ -396,6 +397,87 @@ class Andor:
 
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: SetExposureTime error. Exposure time invalid.'
+
+    def GetNumberADChannels(self):
+        """
+        :return:
+
+        As your Andor SDK system may be capable of operating with more than one
+        A-D converter, this function will tell you the number available.
+        """
+        noChannels = c_int()
+
+        error = self.dll.GetNumberADChannels(noChannels)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+    def SetADChannel(self, channel):
+        """
+        :param channel:
+        :return error message(string):
+
+        This function will set the AD channel to one of the possible A-Ds of the
+        system. This AD channel will be used for all subsequent operations
+        performed by the system.
+        """
+        error = self.dll.SetADChannel(channel)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetADChannel error. Index is out of range.'
+
+    def GetBitDepth(self, channel):
+        """
+        :param channel:
+        :return error message(string):
+
+        This function will retrieve the size in bits of the dynamic range for
+        any available AD channel.
+        """
+        bitDepth = c_int
+
+        error = self.dll.GetBitDepth(channel, byref(bitDepth))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetBitDepth error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetBitDepth error. Invalid channel.'
+
+    def SetOutputAmplifier(self, type):
+        """
+        :param type:
+        :return error message(string):
+
+        Some EMCCD systems have the capability to use a second output amplifier.
+        This function will set the type of output amplifier to be used when
+        reading data from the head of these systems.
+
+        int type:
+            0: Standard EMCCD gain register
+            1: Conventional CCD register
+        """
+        error = self.dll.SetOutputAmplifier(type)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetOutputAmplifier error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetOutputAmplifier error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetOutputAmplifier error. Output amplifier type invalid.'
+
+
 
 
 ERROR_CODE = {
