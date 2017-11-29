@@ -477,6 +477,38 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: SetOutputAmplifier error. Output amplifier type invalid.'
 
+    def GetNumberHSSpeeds(self, channel, type):
+        """
+        :param: channel, type
+        :return: error message (string)
+
+        int channel:
+            The AD channel
+
+        int type:
+            0: Electron mulitiplication
+            1: Conventional
+
+        As your Andor SDK system is capable of operating at more than one
+        horizontal shift speed, this function will return the actual number of
+        speeds possible.
+        """
+        numberHSS = c_int()
+
+        error = self.dll.GetNumberHSSpeeds(channel, type, byref(numberHSS))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetNumberHSSpeeds error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetNumberHSSpeeds error. Invalid channel.'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: GetNumberHSSpeeds error. Invalid horizontal read mode.'
+
 
 
 
