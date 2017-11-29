@@ -725,8 +725,9 @@ class Andor:
         error = self.dll.GetDetector(byref(cw), byref(ch))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            # TODO Perhaps keep these here (define self. variables)
-            return cw.value, ch.value
+            # TODO Values returned here
+
+            pass
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetDetector error. System not initialized.'
