@@ -14,8 +14,7 @@ tkinter.Tk().withdraw()
 
 from GUIWindows import WindowMAIN
 from ADwinSDK import ADwin
-from AndorSDK.Camera import andor
-
+from MyAndor.myandor import Andor
 
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
@@ -63,6 +62,10 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             # Connect to camera
             # Connect to ADwin
 
+        self.cam = Andor()
+        self.cam.Initialize()
+        cw, ch = self.cam.GetDetector()
+
     # Main: defining functions
     def main_startacq(self):
         if self.Main_start_acq.text() == 'Start Acquisition':
@@ -81,6 +84,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
         tempreq = int(self.CameraTemp_temp_req.text())
+        self.cam.SetTemperature(tempreq)
+        self.cam.CoolerON()
 
     # SpectraWin: defining functions
     def spectrawin_tracks(self):

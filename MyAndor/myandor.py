@@ -14,6 +14,7 @@ class Andor:
 
     # TODO Not including EMCCD functions just yet. Will do so only if required.
     # TODO There are some functions which have additional returns that need to be coded
+    # NOTE That EM functions will now not be included as The Newton 920DUP-OE doesn't have EM
 
     def Initialize(self):
         tekst = c_char()
@@ -724,9 +725,8 @@ class Andor:
         error = self.dll.GetDetector(byref(cw), byref(ch))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            # TODO Values returned here
-
-            pass
+            # TODO Perhaps keep these here (define self. variables)
+            return cw.value, ch.value
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetDetector error. System not initialized.'
@@ -854,29 +854,93 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: SetBaselineClamp error. Value must be 0 or 1.'
 
-    def SetPreAmpGain(self):
-        pass
+    def GetNumberPreAmpGains(self):
+        """
+        :return error message(string):
 
-    def GetPreAmpGain(self):
-        pass
+        Available in some systems are a number of pre amp gains that can be applied to the
+        data as it is read out. This function gets the number of these pre amp gains
+        available.
+        """
+        noGains = c_int()
 
-    def SetEMCCDGain(self):
-        pass
+        error = self.dll.GetNumberPreAmpGains(noGains)
 
-    def GetEMCCDGain(self):
-        pass
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            # TODO Need to pass on noGains.value
 
-    def SetEMGainMode(self):
-        pass
+            pass
 
-    def SetEMAdvanced(self):
-        pass
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetNumberPreAmpGains error. System not initialized.'
 
-    def GetEMGainRange(self):
-        pass
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetNumberPreAmpGains error. Acquisition in progress.'
 
-    def GetMostRecentImage16(self):
-        pass
+    def SetPreAmpGain(self, index):
+        """
+        :param index:
+        :return error message(string):
+
+        This function will set the pre amp gain to be used for subsequent acquisitions. The
+        actual gain factor that will be applied can be found though a call to the
+        GetPreAmpGain functions.
+
+        int index
+            Valid values are between 0 and GetNumberPreAmpGains()-1
+        """
+        error = self.dll.SetPreAmpGain(index)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetPreAmpGain error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetPreAmpGain error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetPreAmpGain error. Index out of range.'
+
+    def GetPreAmpGain(self, index):
+        """
+        :param index:
+        :return error message(string):
+
+        For those systems that provide a number of pre amp gains to apply to the data as it
+        is read out; this function retrieves the amount of gain that is stored for a
+        particular index.
+
+        int index:
+            Valid values between 0 and GetNumberPreAmpGains()-1
+        """
+        gain = c_float()
+
+        error = self.dll.GetPreAmpGain(index, byref(gain))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            # TODO gain.value returned here
+
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetPreAmpGain error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetPreAmpGain error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetPreAmpGain error. Invalid index.'
+
+    def GetMostRecentImage16(self, xpx, ypx):
+        xpx = pointer(c_int())
+        ypx = pointer(c_int())
+
+        # TODO Not sure how to best proceed here...
+
+
+
 
 ERROR_CODE = {
     20001: "DRV_ERROR_CODES",
