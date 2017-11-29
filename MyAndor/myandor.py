@@ -765,15 +765,94 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_RANDOM_TRACK_ERROR':
             return 'Andor: SetRandomTracks error. Invalid combination of tracks, out of memory or mode not available.'
 
+    def SetTriggerMode(self, mode):
+        """
+        :param mode:
+        :return error message(string):
 
-    def SetTriggerMode(self):
-        pass
+        This function will set the trigger mode that the camera will operate in.
+
+        int mode
+            0: Internal
+            1: External
+            6: External start
+            7: External exposure (bulb)
+            9. External FVB EM (only valid for EM Newton models)
+            10.Software Trigger
+            12.External charge shifting
+        """
+        error = self.dll.SetTriggerMode(mode)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetTriggerMode error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetTriggerMode error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetTriggerMode error. Trigger mode invalid.'
 
     def GetAcquisitionTimings(self):
-        pass
+        """
+        :return error message(string):
 
-    def SetBaselineClamp(self):
-        pass
+        This function will return the current valid acquisition timing information. This
+        function should be used after all the acquisitions setting have been set
+        e.g. SetExposureTime, SetKineticCycleTime and SetReadMode etc. The values returned
+        are the actual times used in subsequent acquisitions.
+        """
+        exposure = c_float()
+        accumulate = c_float()
+        kinetic = c_float()
+
+        error = self.dll.GetAcquisitionTimings(exposure, accumulate, kinetic)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            # TODO Need to return values
+
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetAcquisitionTimings error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetAcquisitionTimings error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_INVALID_MODE':
+            return 'Andor: GetAcquisitionTimings error. Acquisition or readout mode is not available.'
+
+    def SetBaselineClamp(self, state):
+        """
+        :param state:
+        :return error message(string):
+
+        This function turns on and off the baseline clamp functionality. With this feature
+        enabled, the baseline level of each scan in a kinetic series will be more consistent
+        across the sequence.
+
+        int state
+            0: Disable baseline clamp
+            1: Enable baseline clamp
+        """
+        error = self.dll.SetBaselineClamp(state)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetBaselineClamp error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetBaselineClamp error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_SUPPORTED':
+            return 'Andor: SetBaselineClamp error. Baseline clamp not supported on this camera.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetBaselineClamp error. Value must be 0 or 1.'
 
     def SetPreAmpGain(self):
         pass
