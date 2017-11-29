@@ -9,11 +9,6 @@ class Andor:
         # Loading the Andor dll driver
         self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor SOLIS\\Drivers\\atmcd64d")
 
-        cw = c_int()
-        ch = c_int()
-
-        self.dll.GetDetector(byref(cw), byref(ch))
-
     def __del__(self):
         error = self.dll.ShutDown()
 
@@ -375,6 +370,9 @@ class Andor:
         be large enough
         """
 
+    def GetAcquiredData16(self):
+        pass
+
     def SetExposureTime(self, time):
         """
         :param time:
@@ -650,7 +648,156 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: SetVSSpeed error. Index out of range.'
 
+    def GetStatus(self):
+        """
+        :return error message(string):
 
+        This function will return the current status of the Andor SDK system. This function
+        should be called before an acquisition is started to ensure that it is IDLE and
+        during an acquisition to monitor the process.
+        """
+        status = c_long()
+
+        error = self.dll.GetStatus(byref(status))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            # TODO Note that there are several DRV return messages here
+
+            return ERROR_CODE[status.value]
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetStatus error. System not initialized.'
+
+    def AbortAcquisition(self):
+        """
+        :return error message(string):
+
+        This function aborts the current acquisition if one is active.
+        """
+        error = self.dll.AbortAcquisition()
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            return 'Andor: Acquisition aborted.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: AbortAcquisition error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_IDLE':
+            return 'Andor: AbortAcquisition error. The system is not current acquiring.'
+
+        elif ERROR_CODE[error] == 'DRV_VXDNOTINSTALLED':
+            return 'Andor: AbortAcquisition error. VxD not loaded.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: AbortAcquisition error. Unable to communicate with card.'
+
+    def IsCoolerOn(self):
+        """
+        :return error message(string):
+
+        This function checks the status of the cooler.
+        """
+        iCoolerStatus = c_int()
+
+        error = self.dll.IsCoolerOn(byref(iCoolerStatus))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            # TODO value returned whether OFF or ON
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: IsCoolerOn error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: IsCoolerOn error. Parameter is NULL.'
+
+    def GetDetector(self):
+        """
+        :return error message(string):
+
+        This function returns the size of the detector in pixels. The horizontal axis is
+        taken to be the axis parallel to the readout register.
+        """
+        cw = c_int()
+        ch = c_int()
+
+        error = self.dll.GetDetector(byref(cw), byref(ch))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            # TODO Values returned here
+
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetDetector error. System not initialized.'
+
+    def SetRandomTracks(self, numTracks, areas):
+        """
+        :param numTracks:
+        :param areas:
+        :return error message(string):
+
+        This function will set the Random-Track parameters. The positions of the tracks are
+        validated to ensure that the tracks are in increasing order and do not overlap.
+        The horizontal binning is set via the SetCustomTrackHBin function. The vertical
+        binning is set to the height of each track.
+
+        e.g. Tracks specified as 20 30 31 40 has the first track starting at row 20 and
+        finishing at 30 and the second track starting at 31 and finishing at 40.
+        """
+        error = self.dll.SetRandomTracks(numTracks, areas)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            return 'Andor: CCD tracks updated.'
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetRandomTracks error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetRandomTracks error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetRandomTracks error. Number of tracks invalid.'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: SetRandomTracks error. Track positions invalid.'
+
+        elif ERROR_CODE[error] == 'DRV_RANDOM_TRACK_ERROR':
+            return 'Andor: SetRandomTracks error. Invalid combination of tracks, out of memory or mode not available.'
+
+
+    def SetTriggerMode(self):
+        pass
+
+    def GetAcquisitionTimings(self):
+        pass
+
+    def SetBaselineClamp(self):
+        pass
+
+    def SetPreAmpGain(self):
+        pass
+
+    def GetPreAmpGain(self):
+        pass
+
+    def SetEMCCDGain(self):
+        pass
+
+    def GetEMCCDGain(self):
+        pass
+
+    def SetEMGainMode(self):
+        pass
+
+    def SetEMAdvanced(self):
+        pass
+
+    def GetEMGainRange(self):
+        pass
+
+    def GetMostRecentImage16(self):
+        pass
 
 ERROR_CODE = {
     20001: "DRV_ERROR_CODES",
@@ -687,6 +834,7 @@ ERROR_CODE = {
     20083: "P7_INVALID",
     20089: "DRV_USBERROR",
     20091: "DRV_NOT_SUPPORTED",
+    20094: "DRV_RANDOM_TRACK_ERROR",
     20095: "DRV_INVALID_TRIGGER_MODE",
     20099: "DRV_BINNING_ERROR",
     20990: "DRV_NOCAMERA",
