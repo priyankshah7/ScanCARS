@@ -4,6 +4,7 @@
 
 import sys
 import time
+import clr
 import numpy as np
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -16,6 +17,7 @@ from ADwinSDK import ADwin
 from AndorSDK.Camera import andor
 
 
+
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def __init__(self, parent=None):
         super(ScanCARS, self).__init__(parent)
@@ -24,8 +26,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO Add a function to disable relevant buttons until camera has been cooled
         # TODO Change textboxes to spin boxes where relevant
-
-        self.event_date()
 
         # ------------------------------------------------------------------------------------------------------------
         # Creating variables for tracks (perhaps create function here instead)
@@ -59,6 +59,9 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
 
         # Startup Processes
+        self.event_date()
+            # Connect to camera
+            # Connect to ADwin
 
     # Main: defining functions
     def main_startacq(self):
