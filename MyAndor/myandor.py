@@ -4,48 +4,6 @@ from PIL import Image
 import sys
 
 
-ERROR_CODE = {
-    20001: "DRV_ERROR_CODES",
-    20002: "DRV_SUCCESS",
-    20003: "DRV_VXNOTINSTALLED",
-    20006: "DRV_ERROR_FILELOAD",
-    20007: "DRV_ERROR_VXD_INIT",
-    20010: "DRV_ERROR_PAGELOCK",
-    20011: "DRV_ERROR_PAGE_UNLOCK",
-    20013: "DRV_ERROR_ACK",
-    20024: "DRV_NO_NEW_DATA",
-    20026: "DRV_SPOOLERROR",
-    20034: "DRV_TEMP_OFF",
-    20035: "DRV_TEMP_NOT_STABILIZED",
-    20036: "DRV_TEMP_STABILIZED",
-    20037: "DRV_TEMP_NOT_REACHED",
-    20038: "DRV_TEMP_OUT_RANGE",
-    20039: "DRV_TEMP_NOT_SUPPORTED",
-    20040: "DRV_TEMP_DRIFT",
-    20050: "DRV_COF_NOTLOADED",
-    20053: "DRV_FLEXERROR",
-    20066: "DRV_P1INVALID",
-    20067: "DRV_P2INVALID",
-    20068: "DRV_P3INVALID",
-    20069: "DRV_P4INVALID",
-    20070: "DRV_INIERROR",
-    20071: "DRV_COERROR",
-    20072: "DRV_ACQUIRING",
-    20073: "DRV_IDLE",
-    20074: "DRV_TEMPCYCLE",
-    20075: "DRV_NOT_INITIALIZED",
-    20076: "DRV_P5INVALID",
-    20077: "DRV_P6INVALID",
-    20083: "P7_INVALID",
-    20089: "DRV_USBERROR",
-    20091: "DRV_NOT_SUPPORTED",
-    20095: "DRV_INVALID_TRIGGER_MODE",
-    20099: "DRV_BINNING_ERROR",
-    20990: "DRV_NOCAMERA",
-    20991: "DRV_NOT_SUPPORTED",
-    20992: "DRV_NOT_AVAILABLE"
-}
-
 class Andor:
     def __init__(self):
         # Loading the Andor dll driver
@@ -58,6 +16,8 @@ class Andor:
 
     def __del__(self):
         error = self.dll.ShutDown()
+
+    # TODO Not including EMCCD functions just yet. Will do so only if required.
 
     def Initialize(self):
         tekst = c_char()
@@ -144,6 +104,27 @@ class Andor:
 
         elif ERROR_CODE[error] == 'DRV_NOT_SUPPORTED':
             return 'Andor: SetTemperature error. The camera does not support setting the temperature.'
+
+    def GetTemperature(self):
+        """
+        :return error message(string):
+
+        This function returns the temperature of the detector to the nearest degree.
+        It also gives the status of the cooling process.
+        """
+        temperature = c_int()
+        error = self.dll.GetTemperature(temperature)
+
+        if ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetTemperature error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetTemperature error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: GetTemperature error. Unable to communicate with card.'
+
+        # TODO There are 5 other DRV returns here which give the status of the temp
 
     def ShutDown(self):
         error = self.dll.ShutDown()
@@ -416,3 +397,45 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: SetExposureTime error. Exposure time invalid.'
 
+
+ERROR_CODE = {
+    20001: "DRV_ERROR_CODES",
+    20002: "DRV_SUCCESS",
+    20003: "DRV_VXNOTINSTALLED",
+    20006: "DRV_ERROR_FILELOAD",
+    20007: "DRV_ERROR_VXD_INIT",
+    20010: "DRV_ERROR_PAGELOCK",
+    20011: "DRV_ERROR_PAGE_UNLOCK",
+    20013: "DRV_ERROR_ACK",
+    20024: "DRV_NO_NEW_DATA",
+    20026: "DRV_SPOOLERROR",
+    20034: "DRV_TEMP_OFF",
+    20035: "DRV_TEMP_NOT_STABILIZED",
+    20036: "DRV_TEMP_STABILIZED",
+    20037: "DRV_TEMP_NOT_REACHED",
+    20038: "DRV_TEMP_OUT_RANGE",
+    20039: "DRV_TEMP_NOT_SUPPORTED",
+    20040: "DRV_TEMP_DRIFT",
+    20050: "DRV_COF_NOTLOADED",
+    20053: "DRV_FLEXERROR",
+    20066: "DRV_P1INVALID",
+    20067: "DRV_P2INVALID",
+    20068: "DRV_P3INVALID",
+    20069: "DRV_P4INVALID",
+    20070: "DRV_INIERROR",
+    20071: "DRV_COERROR",
+    20072: "DRV_ACQUIRING",
+    20073: "DRV_IDLE",
+    20074: "DRV_TEMPCYCLE",
+    20075: "DRV_NOT_INITIALIZED",
+    20076: "DRV_P5INVALID",
+    20077: "DRV_P6INVALID",
+    20083: "P7_INVALID",
+    20089: "DRV_USBERROR",
+    20091: "DRV_NOT_SUPPORTED",
+    20095: "DRV_INVALID_TRIGGER_MODE",
+    20099: "DRV_BINNING_ERROR",
+    20990: "DRV_NOCAMERA",
+    20991: "DRV_NOT_SUPPORTED",
+    20992: "DRV_NOT_AVAILABLE"
+}
