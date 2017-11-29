@@ -549,6 +549,107 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_P3INVALID':
             return 'Andor: GetHSSpeed error. Invalid index.'
 
+    def SetHSSpeed(self, type, index):
+        """
+        :param type:
+        :param index:
+        :return error message(string):
+
+        This function will set the speed at which the pixels are shifted into the output
+        node during the readout phase of an acquisition. Typically your camera will be
+        capable of operating at several horizontal shift speeds. To get the actual speed
+        that an index corresponds to, use the GetHSSpeed function.
+
+        int type
+            0: electron multiplication
+            1: conventional
+
+        int index
+            Valid values between 0 to GetNumberHSSpeeds()-1
+        """
+        error = self.dll.SetHSSpeed(type, index)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetHSSpeed error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetHSSpeed error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetHSSpeed error. Mode is invalid.'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: SetHSSpeed error. Index is out of range.'
+
+    def GetNumberVSSpeeds(self):
+        """
+        :return error message(string):
+
+        As your Andor system may be capable of operating at more than one vertical
+        shift speed this function will return the actual number of speeds available.
+        """
+        noVSSpeeds = c_int()
+
+        error = self.dll.GetNumberVSSpeeds(byref(noVSSpeeds))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetNumberVSSpeeds error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetNumberVSSpeeds error. Acquisition in progress.'
+
+    def GetVSSpeed(self, index):
+        """
+        :param index:
+        :return error message(string):
+
+        As your Andor SDK system may be capable of operating at more than one vertical
+        shift speed this function will return the actual speeds available. The value
+        returned is in ms.
+        """
+        VSSpeed = c_float()
+
+        error = self.dll.GetVSSpeed(index, byref(VSSpeed))
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetVSSpeed error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetVSSpeed error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetVSSpeed error. Invalid index.'
+
+    def SetVSSpeed(self, index):
+        """
+        :param index:
+        :return error message(string):
+
+        This function will set the vertical speed to be used for subsequent acquisitions.
+        """
+        error = self.dll.SetVSSpeed(index)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: SetVSSpeed error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: SetVSSpeed error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: SetVSSpeed error. Index out of range.'
+
 
 
 ERROR_CODE = {
