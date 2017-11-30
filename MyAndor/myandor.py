@@ -9,6 +9,17 @@ class Andor:
         # Loading the Andor dll driver
         self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor SOLIS\\Drivers\\atmcd64d")
 
+        # Storing values to be accessed outside of the functions below:
+        self.width = None
+        self.height = None
+        self.temperature = None
+        self.channel = None
+        self.hsspeed = None
+        self.vsspeed = None
+        self.exposure = None
+        self.kinetic = None
+        self.cooler = None
+
     def __del__(self):
         error = self.dll.ShutDown()
 
