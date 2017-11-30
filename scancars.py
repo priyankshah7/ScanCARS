@@ -62,6 +62,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             # Connect to camera
             # Connect to ADwin
 
+        # TODO Note that the number of returns aren't going to be the same as the number of error (1)
         self.cam = Andor()
         self.cam.Initialize()
         cw, ch = self.cam.GetDetector()
