@@ -1,4 +1,6 @@
 # ScanCARS (v1)
+[![Build Status](https://travis-ci.org/priyankshah7/ScanCARS.svg?branch=master)](https://travis-ci.org/priyankshah7/ScanCARS)
+
 *Author: Priyank Shah* <br />
 *Author email: priyank.shah@kcl.ac.uk* <br />
 *Institution: King's College London* <br />
