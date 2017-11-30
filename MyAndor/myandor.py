@@ -19,6 +19,8 @@ class Andor:
         self.exposure = None
         self.kinetic = None
         self.cooler = None
+        self.numberadchannels = None
+        self.bitdepth = None
 
     def __del__(self):
         error = self.dll.ShutDown()
@@ -94,6 +96,7 @@ class Andor:
         cooling ON and OFF use the CoolerON and CoolerOFF functions
         """
         error = self.dll.SetTemperature(temp)
+        self.temperature = temp
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
             pass
@@ -420,7 +423,7 @@ class Andor:
         error = self.dll.GetNumberADChannels(noChannels)
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            pass
+            self.numberadchannels = noChannels.value
 
     def SetADChannel(self, channel):
         """
@@ -452,7 +455,7 @@ class Andor:
         error = self.dll.GetBitDepth(channel, byref(bitDepth))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            pass
+            self.bitdepth = bitDepth.value
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetBitDepth error. System not initialized.'
@@ -736,9 +739,8 @@ class Andor:
         error = self.dll.GetDetector(byref(cw), byref(ch))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            # TODO Values returned here
-
-            pass
+            self.width = cw.value
+            self.height = ch.value
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetDetector error. System not initialized.'

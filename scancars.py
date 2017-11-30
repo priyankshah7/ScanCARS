@@ -63,9 +63,17 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             # Connect to ADwin
 
         # TODO Note that the number of returns aren't going to be the same as the number of error (1)
-        self.cam = Andor()
-        self.cam.Initialize()
-        cw, ch = self.cam.GetDetector()
+        #self.cam = Andor()
+        #self.cam.Initialize()
+        #cw, ch = self.cam.GetDetector()
+        #self.cam.
+
+        # TODO Follwing settings need to be used
+        # SetReadMode(2)
+        # SetAcquisitionMode(3) (check if kinetics or fast kinetics)
+        # SetShutter(?, 0, ?, ?)
+        # SetTriggerMode(0) double check this!
+
 
     # Main: defining functions
     def main_startacq(self):
