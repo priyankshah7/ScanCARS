@@ -4,7 +4,6 @@
 
 import sys
 import time
-import clr
 import numpy as np
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QApplication, QMainWindow
