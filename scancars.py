@@ -64,17 +64,10 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.cam = Andor()
         self.initialize_andor()
 
-
-
-
-
-
-
-
         # TODO Follwing settings need to be used
         # SetReadMode(2)
         # SetAcquisitionMode(3) (check if kinetics or fast kinetics)
-        # SetShutter(?, 0, ?, ?)
+        # SetShutter(0, 0, 0, 0)
         # SetTriggerMode(0) double check this!
 
         # ------------------------------------------------------------------------------------------------------------
@@ -85,20 +78,35 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         messageInitialize = self.cam.Initialize()
         self.eventlog(messageInitialize)
 
-        # Getting the detector chip size
-        messageGetDetector = self.cam.GetDetector()
-        if messageGetDetector is not None:
-            self.eventlog(messageGetDetector)
+        # Setting the shutter
+        messageSetShutter = self.cam.SetShutter(0, 0, 0, 0)
+        if messageSetShutter is not None:
+            self.eventlog(messageSetShutter)
+
+        # Setting initial acquisition mode to single scan
+        messageSetAcquisitionMode = self.cam.SetAcquisitionMode(1)
+        if messageSetAcquisitionMode is not None:
+            self.eventlog(messageSetAcquisitionMode)
 
         # Setting read mode to Random Track
         messageSetReadMode = self.cam.SetReadMode(2)
         if messageSetReadMode is not None:
             self.eventlog(messageSetReadMode)
 
-        # Setting acquisition mode to kinetics
-        messageSetAcquisitionMode = self.cam.SetAcquisitionMode(3)
-        if messageSetAcquisitionMode is not None:
-            self.eventlog(messageSetAcquisitionMode)
+        # Getting and setting AD channel
+        messageGetNumberADChannels = self.cam.GetNumberADChannels()
+        if messageGetNumberADChannels is not None:
+            self.eventlog(messageGetNumberADChannels)
+
+        messageSetADChannel = self.cam.SetADChannel(1)
+        if messageSetADChannel is not None:
+            self.eventlog(messageSetADChannel)
+
+        # Getting the detector chip size
+        messageGetDetector = self.cam.GetDetector()
+        if messageGetDetector is not None:
+            self.eventlog(messageGetDetector)
+
 
     def initialize_adwin(self):
         pass
@@ -116,7 +124,9 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             self.Main_start_acq.setText('Start Acquisition')
 
     def main_shutdown(self):
-        pass
+        messageShutDown = self.cam.ShutDown()
+        if messageShutDown is not None:
+            self.eventlog(messageShutDown)
 
     # CameraTemp: defining functions
     def cameratemp_cooler(self):

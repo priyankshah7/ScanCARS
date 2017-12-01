@@ -12,6 +12,7 @@ class Andor:
         self.width = None
         self.height = None
         self.temperature = None
+        self.coolerstatus = None
         self.channel = None
         self.hsspeed = None
         self.vsspeed = None
@@ -716,8 +717,7 @@ class Andor:
         error = self.dll.IsCoolerOn(byref(iCoolerStatus))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            # TODO value returned whether OFF or ON
-            pass
+            self.coolerstatus = iCoolerStatus.value
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: IsCoolerOn error. System not initialized.'
