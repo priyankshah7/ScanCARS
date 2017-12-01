@@ -9,6 +9,7 @@ data in a microscope-based experimental setup. It's original
 development is to acquire spectral interferometric polarized coherent 
 anti-Stokes Raman spectroscopy (SIPCARS) hyperspectral data.
 
+### Requirements
 The two software development kits (SDKs) included are the Andor SDK and 
 the ADwin SDK. The Andor SDK controls Andor's range of CCD cameras and its
 use is dependent on the installation of the drivers provided by Andor. The
@@ -20,9 +21,9 @@ The following python packages are also required:
 + pyqtgraph
 + pyqt5
 
-ScanCARS is able to acquire both single-point spectroscopic data and
-hyperspectral data. The file for both options will be output as a .txt 
-file.
+### Data file type
++ Single-point spectroscopic data: .txt file
++ Hyperspectral data: .txt file
 
 [![Build Status](https://travis-ci.org/priyankshah7/ScanCARS.svg?branch=master)](https://travis-ci.org/priyankshah7/ScanCARS)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/033308ac957b0d2608ca/test_coverage)](https://codeclimate.com/github/priyankshah7/ScanCARS/test_coverage)
