@@ -13,7 +13,7 @@ tkinter.Tk().withdraw()
 
 from GUIWindows import WindowMAIN
 from ADwinSDK import ADwin
-from AndorSDK.myandor import Andor
+from AndorSDK.pyandor import Andor
 
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
@@ -56,16 +56,20 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         # ------------------------------------------------------------------------------------------------------------
 
+        # ------------------------------------------------------------------------------------------------------------
         # Startup Processes
         self.event_date()
-            # Connect to camera
-            # Connect to ADwin
 
-        # TODO Note that the number of returns aren't going to be the same as the number of error (1)
-        #self.cam = Andor()
-        #self.cam.Initialize()
-        #cw, ch = self.cam.GetDetector()
-        #self.cam.
+        # Initializing the camera
+        self.cam = Andor()
+        self.initialize_andor()
+
+
+
+
+
+
+
 
         # TODO Follwing settings need to be used
         # SetReadMode(2)
@@ -73,6 +77,31 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # SetShutter(?, 0, ?, ?)
         # SetTriggerMode(0) double check this!
 
+        # ------------------------------------------------------------------------------------------------------------
+
+    # Initialization functions (Andor and ADwin)
+    def initialize_andor(self):
+        # Initializing the camera
+        messageInitialize = self.cam.Initialize()
+        self.eventlog(messageInitialize)
+
+        # Getting the detector chip size
+        messageGetDetector = self.cam.GetDetector()
+        if messageGetDetector is not None:
+            self.eventlog(messageGetDetector)
+
+        # Setting read mode to Random Track
+        messageSetReadMode = self.cam.SetReadMode(2)
+        if messageSetReadMode is not None:
+            self.eventlog(messageSetReadMode)
+
+        # Setting acquisition mode to kinetics
+        messageSetAcquisitionMode = self.cam.SetAcquisitionMode(3)
+        if messageSetAcquisitionMode is not None:
+            self.eventlog(messageSetAcquisitionMode)
+
+    def initialize_adwin(self):
+        pass
 
     # Main: defining functions
     def main_startacq(self):
