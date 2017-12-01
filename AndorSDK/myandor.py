@@ -1,6 +1,5 @@
 import platform
 from ctypes import *
-from PIL import Image
 import sys
 
 
