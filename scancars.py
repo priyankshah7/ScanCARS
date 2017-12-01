@@ -13,7 +13,7 @@ tkinter.Tk().withdraw()
 
 from GUIWindows import WindowMAIN
 from ADwinSDK import ADwin
-from MyAndor.myandor import Andor
+from AndorSDK.myandor import Andor
 
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
