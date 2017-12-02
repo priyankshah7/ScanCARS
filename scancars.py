@@ -88,10 +88,10 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         if messageSetReadMode is not None:
             self.eventlog(messageSetReadMode)
 
-        RandomTrackposition = [int(self.CameraOptions_track1lower.text()),
-                               int(self.CameraOptions_track1upper.text()),
-                               int(self.CameraOptions_track2lower.text()),
-                               int(self.CameraOptions_track2upper.text())]
+        RandomTrackposition = np.array([int(self.CameraOptions_track1lower.text()),
+                                        int(self.CameraOptions_track1upper.text()),
+                                        int(self.CameraOptions_track2lower.text()),
+                                        int(self.CameraOptions_track2upper.text())])
 
         messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
         if messageSetRandomTrack is not None:
@@ -153,10 +153,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             self.eventlog(messageCoolerOFF)
 
         else:
-            self.cam.GetTemperature()
-            self.eventlog('Andor: Waiting for camera to heat to -20C...')
-            while self.cam.temperature < -20:
-                pass
+            self.eventlog('Andor: Waiting for camera to heat up (~ 2.5 minutes)...')
+            time.sleep(150)
 
             messageShutDown = self.cam.ShutDown()
             if messageShutDown is not None:

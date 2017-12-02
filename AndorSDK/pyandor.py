@@ -72,7 +72,7 @@ class Andor:
         error = self.dll.CoolerOFF()
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            return 'Andor: Temperature controller switched OFF.'
+            pass
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: CoolerOFF error. System not initialized.'
@@ -757,7 +757,9 @@ class Andor:
         e.g. Tracks specified as 20 30 31 40 has the first track starting at row 20 and
         finishing at 30 and the second track starting at 31 and finishing at 40.
         """
-        error = self.dll.SetRandomTracks(numTracks, areas)
+        areas_to_pass = areas.ctypes.data_as(POINTER(c_long))
+
+        error = self.dll.SetRandomTracks(numTracks, areas_to_pass)
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
             return 'Andor: CCD tracks updated.'
