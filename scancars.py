@@ -68,7 +68,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # SetReadMode(2)
         # SetAcquisitionMode(3) (check if kinetics or fast kinetics)
         # SetShutter(0, 0, 0, 0)
-        # SetTriggerMode(0) double check this!
+        # SetTriggerMode(0)
 
         # ------------------------------------------------------------------------------------------------------------
 
@@ -106,11 +106,15 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         if messageSetADChannel is not None:
             self.eventlog(messageSetADChannel)
 
+        # Setting trigger mode
+        messageSetTriggerMode = self.cam.SetTriggerMode(0)
+        if messageSetRandomTrack is not None:
+            self.eventlog(messageSetRandomTrack)
+
         # Getting the detector chip size
         messageGetDetector = self.cam.GetDetector()
         if messageGetDetector is not None:
             self.eventlog(messageGetDetector)
-
 
     def initialize_adwin(self):
         pass
@@ -128,6 +132,11 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             if messageSetExposureTime is not None:
                 self.eventlog(messageSetExposureTime)
 
+            messageGetAcquistionTimings = self.cam.GetAcquisitionTimings()
+            if messageGetAcquistionTimings is not None:
+                self.eventlog(messageGetAcquistionTimings)
+            self.SpectraWin_sum_track.setText(self.cam.exposure)
+
             self.status('Acquiring...')
             self.Main_start_acq.setText('Stop Acquisition')
 
@@ -139,9 +148,19 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             self.Main_start_acq.setText('Start Acquisition')
 
     def main_shutdown(self):
-        messageShutDown = self.cam.ShutDown()
-        if messageShutDown is not None:
-            self.eventlog(messageShutDown)
+        messageCoolerOFF = self.cam.CoolerOFF()
+        if messageCoolerOFF is not None:
+            self.eventlog(messageCoolerOFF)
+
+        else:
+            self.cam.GetTemperature()
+            self.eventlog('Andor: Waiting for camera to heat to -20C...')
+            while self.cam.temperature < -20:
+                pass
+
+            messageShutDown = self.cam.ShutDown()
+            if messageShutDown is not None:
+                self.eventlog(messageShutDown)
 
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
@@ -195,6 +214,15 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         time_req = float(self.HyperAcq_time_req.text())
         darkfield_req = int(self.HyperAcq_darkfield.text())
+
+    # Graphing and imaging functions
+    def carsplot(self, spectrum):
+        self.Main_specwin.clear()
+        self.Main_specwin.plot(spectrum)
+
+    def carsimage(self, image):
+        self.Main_imagewin.clear()
+        self.Main_imagewin.setImage(image)
 
     # Status: defining status and eventlog functions
     def status(self, message):
