@@ -26,7 +26,6 @@ class Andor:
         error = self.dll.ShutDown()
 
     # TODO Not including EMCCD functions just yet. Will do so only if required.
-    # TODO There are some functions which have additional returns that need to be coded
     # NOTE That EM functions will now not be included as The Newton 920DUP-OE doesn't have EM
 
     def Initialize(self):
@@ -824,9 +823,7 @@ class Andor:
         error = self.dll.GetAcquisitionTimings(exposure, accumulate, kinetic)
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            # TODO Need to return values
-
-            pass
+            self.exposure = exposure.value
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetAcquisitionTimings error. System not initialized.'

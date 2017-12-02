@@ -12,7 +12,8 @@ anti-Stokes Raman spectroscopy (SIPCARS) hyperspectral data.
 ### Requirements
 The two software development kits (SDKs) included are the Andor SDK and 
 the ADwin SDK. The Andor SDK controls Andor's range of CCD cameras and its
-use is dependent on the installation of the drivers provided by Andor. The
+use is dependent on the installation of the drivers provided by Andor. The Andor
+SDK is modified from [here](https://github.com/hamidohadi/pyandor). The
 ADwin SDK is used to drive the microscope stage and its use is also
 dependent on the installation of the drivers provided by ADwin.
 
