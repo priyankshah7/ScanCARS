@@ -83,15 +83,19 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         if messageSetShutter is not None:
             self.eventlog(messageSetShutter)
 
-        # Setting initial acquisition mode to single scan
-        messageSetAcquisitionMode = self.cam.SetAcquisitionMode(1)
-        if messageSetAcquisitionMode is not None:
-            self.eventlog(messageSetAcquisitionMode)
-
-        # Setting read mode to Random Track
+        # Setting read mode to Random Track and setting track positions
         messageSetReadMode = self.cam.SetReadMode(2)
         if messageSetReadMode is not None:
             self.eventlog(messageSetReadMode)
+
+        RandomTrackposition = [int(self.CameraOptions_track1lower.text()),
+                               int(self.CameraOptions_track1upper.text()),
+                               int(self.CameraOptions_track2lower.text()),
+                               int(self.CameraOptions_track2upper.text())]
+
+        messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
+        if messageSetRandomTrack is not None:
+            self.eventlog(messageSetRandomTrack)
 
         # Getting and setting AD channel
         messageGetNumberADChannels = self.cam.GetNumberADChannels()
@@ -113,12 +117,23 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # Main: defining functions
     def main_startacq(self):
+        # If acquisition is not alreadly running:
         if self.Main_start_acq.text() == 'Start Acquisition':
+            # Setting the acquisition mode to single scan
+            messageSetAcquisitionMode = self.cam.SetAcquisitionMode(1)
+            if messageSetAcquisitionMode is not None:
+                self.eventlog(messageSetAcquisitionMode)
+
+            messageSetExposureTime = self.cam.SetExposureTime(float(self.SpectralAcq_time_req.text()))
+            if messageSetExposureTime is not None:
+                self.eventlog(messageSetExposureTime)
+
             self.status('Acquiring...')
             self.Main_start_acq.setText('Stop Acquisition')
 
             time_req = float(self.SpectralAcq_time_req.text())
 
+        # If acquisition is to be stopped:
         elif self.Main_start_acq.text() == 'Stop Acquisition':
             self.status('')
             self.Main_start_acq.setText('Start Acquisition')
@@ -147,17 +162,23 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # CameraOptions: defining functions
     def cameraoptions_update(self):
-        track1_upper = int(self.CameraOptions_track1upper.text())
-        track1_lower = int(self.CameraOptions_track1lower.text())
-        track2_upper = int(self.CameraOptions_track2upper.text())
-        track2_lower = int(self.CameraOptions_track2lower.text())
+        RandomTrackposition = [int(self.CameraOptions_track1lower.text()),
+                               int(self.CameraOptions_track1upper.text()),
+                               int(self.CameraOptions_track2lower.text()),
+                               int(self.CameraOptions_track2upper.text())]
+
+        messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
+        if messageSetRandomTrack is not None:
+            self.eventlog(messageSetRandomTrack)
 
     def cameraoptions_openimage(self):
         pass
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
-        time_req = float(self.SpectralAcq_update_time.text())
+        messageSetExposureTime = self.cam.SetExposureTime(float(self.SpectralAcq_time_req.text()))
+        if messageSetExposureTime is not None:
+            self.eventlog(messageSetExposureTime)
 
     def spectralacq_start(self):
         time_req = float(self.SpectralAcq_update_time.text())
