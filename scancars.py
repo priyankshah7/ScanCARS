@@ -24,6 +24,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO Add a function to disable relevant buttons until camera has been cooled
         # TODO Change textboxes to spin boxes where relevant
+        # TODO If speed becomes an issue, consider using numba package with jit decorator
+            # Required to use maths functions instead of numpy
 
         # ------------------------------------------------------------------------------------------------------------
         # Creating variables for tracks (perhaps create function here instead)
@@ -63,14 +65,18 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # Initializing the camera
         self.cam = Andor()
         self.initialize_andor()
-
-        # TODO Follwing settings need to be used
-        # SetReadMode(2)
-        # SetAcquisitionMode(3) (check if kinetics or fast kinetics)
-        # SetShutter(0, 0, 0, 0)
-        # SetTriggerMode(0)
-
         # ------------------------------------------------------------------------------------------------------------
+
+    def __del__(self):
+        self.eventlog('An error has occurred. This program will exit after the Andor camera has shut down.')
+
+        messageCoolerOFF = self.cam.CoolerOFF()
+        if messageCoolerOFF is not None:
+            self.eventlog(messageCoolerOFF)
+
+        messageShutDown = self.cam.ShutDown()
+        if messageShutDown is not None:
+            self.eventlog(messageShutDown)
 
     # Initialization functions (Andor and ADwin)
     def initialize_andor(self):
@@ -221,6 +227,10 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def carsimage(self, image):
         self.Main_imagewin.clear()
         self.Main_imagewin.setImage(image)
+
+    # Grey out all buttons
+    def deactivate_buttons(self):
+        pass
 
     # Status: defining status and eventlog functions
     def status(self, message):
