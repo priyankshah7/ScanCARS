@@ -61,10 +61,13 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
         # Startup Processes
         self.event_date()
+        self.deactivate_buttons()       # deactivate until everything is loaded
 
         # Initializing the camera
-        self.cam = Andor()
-        self.initialize_andor()
+        # self.cam = Andor()
+        # self.initialize_andor()
+
+        self.activate_buttons()         # activated buttons
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
@@ -82,17 +85,21 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def initialize_andor(self):
         # Initializing the camera
         messageInitialize = self.cam.Initialize()
-        self.eventlog(messageInitialize)
+        if messageInitialize is not None:
+            self.eventlog(messageInitialize)
+            return
 
         # Setting the shutter
-        messageSetShutter = self.cam.SetShutter(0, 0, 0, 0)
+        messageSetShutter = self.cam.SetShutter(1, 2, 0, 0)
         if messageSetShutter is not None:
             self.eventlog(messageSetShutter)
+            return
 
         # Setting read mode to Random Track and setting track positions
         messageSetReadMode = self.cam.SetReadMode(2)
         if messageSetReadMode is not None:
             self.eventlog(messageSetReadMode)
+            return
 
         RandomTrackposition = np.array([int(self.CameraOptions_track1lower.text()),
                                         int(self.CameraOptions_track1upper.text()),
@@ -102,25 +109,31 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
         if messageSetRandomTrack is not None:
             self.eventlog(messageSetRandomTrack)
+            return
 
         # Getting and setting AD channel
         messageGetNumberADChannels = self.cam.GetNumberADChannels()
         if messageGetNumberADChannels is not None:
             self.eventlog(messageGetNumberADChannels)
+            return
 
         messageSetADChannel = self.cam.SetADChannel(1)
         if messageSetADChannel is not None:
             self.eventlog(messageSetADChannel)
+            return
 
         # Setting trigger mode
         messageSetTriggerMode = self.cam.SetTriggerMode(0)
         if messageSetRandomTrack is not None:
             self.eventlog(messageSetRandomTrack)
+            return
 
         # Getting the detector chip size
-        messageGetDetector = self.cam.GetDetector()
-        if messageGetDetector is not None:
-            self.eventlog(messageGetDetector)
+        # messageGetDetector = self.cam.GetDetector()
+        # if messageGetDetector is not None:
+        #     self.eventlog(messageGetDetector)
+
+        self.eventlog('Andor: Successfully initialized.')
 
     def initialize_adwin(self):
         pass
@@ -203,6 +216,11 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         if messageSetExposureTime is not None:
             self.eventlog(messageSetExposureTime)
 
+        # To retrieve the data
+        # messageGetAcquiredData16 = self.cam.GetAcquiredData16()
+        # if messageGetAcquiredData16 is not None:
+        #     self.eventlog(messageGetAcquiredData16)
+
     def spectralacq_start(self):
         time_req = float(self.SpectralAcq_update_time.text())
         darkfield_req = int(self.SpectralAcq_darkfield.text())
@@ -228,9 +246,32 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.Main_imagewin.clear()
         self.Main_imagewin.setImage(image)
 
-    # Grey out all buttons
+    # Activate/deactivate buttons
     def deactivate_buttons(self):
-        pass
+        self.Main_start_acq.setEnabled(False)
+        self.Main_shutdown.setEnabled(False)
+        self.CameraTemp_cooler_on.setEnabled(False)
+        self.SpectraWin_sum_track.setEnabled(False)
+        self.SpectraWin_single_track.setEnabled(False)
+        self.Grating_update.setEnabled(False)
+        self.CameraOptions_openimage.setEnabled(False)
+        self.CameraOptions_update.setEnabled(False)
+        self.SpectralAcq_start.setEnabled(False)
+        self.SpectralAcq_update_time.setEnabled(False)
+        self.HyperAcq_start.setEnabled(False)
+
+    def activate_buttons(self):
+        self.Main_start_acq.setEnabled(True)
+        self.Main_shutdown.setEnabled(True)
+        self.CameraTemp_cooler_on.setEnabled(True)
+        self.SpectraWin_sum_track.setEnabled(True)
+        self.SpectraWin_single_track.setEnabled(True)
+        self.Grating_update.setEnabled(True)
+        self.CameraOptions_openimage.setEnabled(True)
+        self.CameraOptions_update.setEnabled(True)
+        self.SpectralAcq_start.setEnabled(True)
+        self.SpectralAcq_update_time.setEnabled(True)
+        self.HyperAcq_start.setEnabled(True)
 
     # Status: defining status and eventlog functions
     def status(self, message):

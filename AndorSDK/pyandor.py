@@ -1,6 +1,6 @@
-import platform
+# Python version of the Andor SDK
+
 from ctypes import *
-import sys
 
 
 class Andor:
@@ -33,7 +33,7 @@ class Andor:
         error = self.dll.Initialize(byref(tekst))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            return 'Andor: camera initialized.'
+            pass
 
         elif ERROR_CODE[error] == 'DRV_INIERROR':
             return 'Andor: error. Unable to load DETECTOR.INI'
@@ -762,7 +762,7 @@ class Andor:
         error = self.dll.SetRandomTracks(numTracks, areas_to_pass)
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            return 'Andor: CCD tracks updated.'
+            pass
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: SetRandomTracks error. System not initialized.'
