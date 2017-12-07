@@ -21,6 +21,9 @@ class Andor:
         self.cooler = None
         self.numberadchannels = None
         self.bitdepth = None
+        self.acquisitionmode = None
+        self.randomtracks = None
+        self.imagearray = None
 
     def __del__(self):
         error = self.dll.ShutDown()
@@ -385,7 +388,55 @@ class Andor:
         """
 
     def GetAcquiredData16(self):
-        pass
+        """
+        :param imageArray:
+        :return:
+
+         This function will return the data from the last acquisition. The data
+        are returned as long integers (16bit signed integers). The array must
+        be large enough
+        """
+        self.imagearray = None
+
+        if self.acquisitionmode == 1:
+            dim = self.width * self.randomtracks
+        else:
+            # TODO for now....
+            return
+
+        cimageArray = c_int * dim
+        cimage = cimageArray()
+
+        error = self.dll.GetAcquiredData16(pointer(cimage), dim)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetAcquiredData error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetAcquiredData error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: GetAcquiredData error. Unable to communicate with card.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetAcquiredData error. Invalid pointer (i.e. NULL).'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: GetAcquiredData error. Array size is incorrect.'
+
+        elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
+            return 'Andor: GetAcquiredData error. No acquisition has taken place.'
+
+        imageArray = None
+        for i in range(len(cimage)):
+            imageArray.append(cimage[i])
+
+        self.imagearray = imageArray[:]
+
+        return
 
     def SetExposureTime(self, time):
         """
@@ -762,7 +813,7 @@ class Andor:
         error = self.dll.SetRandomTracks(numTracks, areas_to_pass)
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            pass
+            self.randomtracks = numTracks
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: SetRandomTracks error. System not initialized.'
