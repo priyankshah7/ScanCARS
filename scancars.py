@@ -141,12 +141,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             return
 
         # Setting horizontal and vertical shift speeds
-        messageSetHSSpeed = self.cam.SetHSSpeed(1, 1)
+        messageSetHSSpeed = self.cam.SetHSSpeed(1, 0)
         if messageSetHSSpeed is not None:
             self.eventlog(messageSetHSSpeed)
             return
 
-        messageSetVSSpeed = self.cam.SetVSSpeed(3.3)
+        messageSetVSSpeed = self.cam.SetVSSpeed(3)
         if messageSetVSSpeed is not None:
             self.eventlog(messageSetVSSpeed)
             return
@@ -171,12 +171,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
                 self.eventlog(messageSetExposureTime)
                 return
 
-            messageGetAcquistionTimings = self.cam.GetAcquisitionTimings()
-            if messageGetAcquistionTimings is not None:
-                self.eventlog(messageGetAcquistionTimings)
+            messageGetAcquisitionTimings = self.cam.GetAcquisitionTimings()
+            if messageGetAcquisitionTimings is not None:
+                self.eventlog(messageGetAcquisitionTimings)
                 return
             else:
-                self.SpectralAcq_actual_time.setText(self.cam.exposure)
+                self.SpectralAcq_actual_time.setText(str("%.4f" % round(self.cam.exposure, 4)))
 
             messageSetShutter = self.cam.SetShutter(1, 0, 0, 0)
             if messageSetShutter is not None:
@@ -185,33 +185,31 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
             # ... functions to start acquiring ...
 
-            # self.pImageArray = None
-            # self.pSize = None
-            #
-            # messageGetAcquiredData = self.cam.GetAcquiredData(self.pImageArray)
-            # if messageGetAcquiredData
-
             messageStartAcquisition = self.cam.StartAcquisition()
             if messageStartAcquisition is not None:
                 self.eventlog(messageStartAcquisition)
                 self.cam.AbortAcquisition()
                 return
             else:
-                self.status('Acquiring...')
-                self.Main_start_acq.setText('Stop Acquisition')
+                # self.status('Acquiring...')
+                # self.Main_start_acq.setText('Stop Acquisition')
 
                 self.cam.GetAcquiredData16()
 
-                self.track1 = self.cam.imagearray[0:self.cam.width-1]
-                self.track2 = self.cam.imagearray[self.cam.width:2*self.cam.width - 1]
-                self.trackdiff = self.track2 - self.track1
-                self.tracksum = self.track1 + self.track2
+                self.eventlog(str(type(self.cam.imagearray)))
 
-                # Plotting tracks and different spectra
-                self.Main_specwin.clear()
-                self.Main_specwin.plot(self.track1, pen='r', name='track1')
-                self.Main_specwin.plot(self.track2, pen='g', name='track2')
-                self.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
+                # self.track1 = self.cam.imagearray[0:self.cam.width-1]
+                # self.track2 = self.cam.imagearray[self.cam.width:2*self.cam.width - 1]
+                # self.trackdiff = self.track2 - self.track1
+                # self.tracksum = self.track1 + self.track2
+
+                # # Plotting tracks and different spectra
+                # self.Main_specwin.clear()
+                # self.Main_specwin.plot(self.track1, pen='r', name='track1')
+                # self.Main_specwin.plot(self.track2, pen='g', name='track2')
+                # self.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
+
+            self.status('Acquiring...')
 
         # If acquisition is to be stopped:
         elif self.Main_start_acq.text() == 'Stop Acquisition':

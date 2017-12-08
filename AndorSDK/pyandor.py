@@ -6,7 +6,7 @@ from ctypes import *
 class Andor:
     def __init__(self):
         # Loading the Andor dll driver
-        self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor SOLIS\\Drivers\\atmcd64d")
+        self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
 
         # Storing values to be accessed outside of the functions below:
         self.width = None
@@ -561,7 +561,7 @@ class Andor:
         error = self.dll.GetNumberHSSpeeds(channel, type, byref(numberHSS))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            pass
+            self.hsspeed = numberHSS.value
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetNumberHSSpeeds error. System not initialized.'
@@ -659,7 +659,7 @@ class Andor:
         error = self.dll.GetNumberVSSpeeds(byref(noVSSpeeds))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            pass
+            self.vsspeed = noVSSpeeds.value
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetNumberVSSpeeds error. System not initialized.'
@@ -873,7 +873,7 @@ class Andor:
         accumulate = c_float()
         kinetic = c_float()
 
-        error = self.dll.GetAcquisitionTimings(exposure, accumulate, kinetic)
+        error = self.dll.GetAcquisitionTimings(byref(exposure), byref(accumulate), byref(kinetic))
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
             self.exposure = exposure.value
