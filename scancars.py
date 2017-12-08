@@ -12,6 +12,7 @@ from PyQt5 import QtCore
 from guiForms import WindowMAIN
 from guiFunctions import toggle, post
 from guiFunctions.graphing import *
+from guiMain.InitializeAndor import *
 
 from ADwinSDK import ADwin
 from AndorSDK.pyandor import Andor
@@ -68,8 +69,13 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         toggle.deactivate_buttons(self)
 
         # Initializing the camera
-        # self.cam = Andor()
+        self.cam = Andor()
+        self.post = post
         # self.initialize_andor()
+
+        self.threadpool = QtCore.QThreadPool()
+        initializeandor = InitializeAndor(self)
+        self.threadpool.start(initializeandor)
 
         toggle.activate_buttons(self)
         # ------------------------------------------------------------------------------------------------------------

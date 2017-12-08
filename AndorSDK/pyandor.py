@@ -7,7 +7,7 @@ class Andor:
     def __init__(self):
         # Loading the Andor dll driver
         # TODO Not sure which driver to use! ........
-        self.dll = cdll.LoadLibrary("C:\Program Files\Andor SOLIS\\atmcd32d")
+        self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
 
         # Storing values to be accessed outside of the functions below:
         self.width = None
