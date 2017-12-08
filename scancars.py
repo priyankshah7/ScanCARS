@@ -8,10 +8,11 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import QtCore
-import tkinter.filedialog
-tkinter.Tk().withdraw()
 
-from GUIWindows import WindowMAIN
+from guiForms import WindowMAIN
+from guiFunctions import toggle, post
+from guiFunctions.graphing import *
+
 from ADwinSDK import ADwin
 from AndorSDK.pyandor import Andor
 
@@ -22,7 +23,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.setupUi(self)
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
-        # TODO Add a function to disable relevant buttons until camera has been cooled
         # TODO Change textboxes to spin boxes where relevant
         # TODO If speed becomes an issue, consider using numba package with jit decorator
             # Required to use maths functions instead of numpy
@@ -64,45 +64,45 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         # ------------------------------------------------------------------------------------------------------------
         # Startup Processes
-        self.event_date()
-        self.deactivate_buttons()       # deactivate until everything is loaded
+        post.event_date(self)
+        toggle.deactivate_buttons(self)
 
         # Initializing the camera
-        self.cam = Andor()
-        self.initialize_andor()
+        # self.cam = Andor()
+        # self.initialize_andor()
 
-        self.activate_buttons()         # activated buttons
+        toggle.activate_buttons(self)
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
-        self.eventlog('An error has occurred. This program will exit after the Andor camera has shut down.')
+        post.eventlog(self, 'An error has occurred. This program will exit after the Andor camera has shut down.')
 
         messageCoolerOFF = self.cam.CoolerOFF()
         if messageCoolerOFF is not None:
-            self.eventlog(messageCoolerOFF)
+            post.eventlog(self, messageCoolerOFF)
 
         messageShutDown = self.cam.ShutDown()
         if messageShutDown is not None:
-            self.eventlog(messageShutDown)
+            post.eventlog(self, messageShutDown)
 
     # Initialization functions (Andor and ADwin)
     def initialize_andor(self):
         # Initializing the camera
         messageInitialize = self.cam.Initialize()
         if messageInitialize is not None:
-            self.eventlog(messageInitialize)
+            post.eventlog(self, messageInitialize)
             return
 
         # Setting the shutter
         messageSetShutter = self.cam.SetShutter(1, 2, 0, 0)
         if messageSetShutter is not None:
-            self.eventlog(messageSetShutter)
+            post.eventlog(self, messageSetShutter)
             return
 
         # Setting read mode to Random Track and setting track positions
         messageSetReadMode = self.cam.SetReadMode(2)
         if messageSetReadMode is not None:
-            self.eventlog(messageSetReadMode)
+            post.eventlog(self, messageSetReadMode)
             return
 
         RandomTrackposition = np.array([int(self.CameraOptions_track1lower.text()),
@@ -112,44 +112,44 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
         if messageSetRandomTrack is not None:
-            self.eventlog(messageSetRandomTrack)
+            post.eventlog(self, messageSetRandomTrack)
             return
 
         # Getting and setting AD channel
         messageGetNumberADChannels = self.cam.GetNumberADChannels()
         if messageGetNumberADChannels is not None:
-            self.eventlog(messageGetNumberADChannels)
+            post.eventlog(self, messageGetNumberADChannels)
             return
 
         messageSetADChannel = self.cam.SetADChannel(1)
         if messageSetADChannel is not None:
-            self.eventlog(messageSetADChannel)
+            post.eventlog(self, messageSetADChannel)
             return
 
         # Setting trigger mode
         messageSetTriggerMode = self.cam.SetTriggerMode(0)
         if messageSetRandomTrack is not None:
-            self.eventlog(messageSetRandomTrack)
+            post.eventlog(self, messageSetRandomTrack)
             return
 
         # Getting the detector chip size
         messageGetDetector = self.cam.GetDetector()
         if messageGetDetector is not None:
-            self.eventlog(messageGetDetector)
+            post.eventlog(self, messageGetDetector)
             return
 
         # Setting horizontal and vertical shift speeds
         messageSetHSSpeed = self.cam.SetHSSpeed(1, 0)
         if messageSetHSSpeed is not None:
-            self.eventlog(messageSetHSSpeed)
+            post.eventlog(self, messageSetHSSpeed)
             return
 
         messageSetVSSpeed = self.cam.SetVSSpeed(3)
         if messageSetVSSpeed is not None:
-            self.eventlog(messageSetVSSpeed)
+            post.eventlog(self, messageSetVSSpeed)
             return
 
-        self.eventlog('Andor: Successfully initialized.')
+        post.eventlog(self, 'Andor: Successfully initialized.')
 
     def initialize_adwin(self):
         pass
@@ -161,40 +161,40 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             # Setting the acquisition mode to single scan
             messageSetAcquisitionMode = self.cam.SetAcquisitionMode(1)
             if messageSetAcquisitionMode is not None:
-                self.eventlog(messageSetAcquisitionMode)
+                post.eventlog(self, messageSetAcquisitionMode)
                 return
 
             messageSetExposureTime = self.cam.SetExposureTime(float(self.SpectralAcq_time_req.text()))
             if messageSetExposureTime is not None:
-                self.eventlog(messageSetExposureTime)
+                post.eventlog(self, messageSetExposureTime)
                 return
 
             messageGetAcquisitionTimings = self.cam.GetAcquisitionTimings()
             if messageGetAcquisitionTimings is not None:
-                self.eventlog(messageGetAcquisitionTimings)
+                post.eventlog(self, messageGetAcquisitionTimings)
                 return
             else:
                 self.SpectralAcq_actual_time.setText(str("%.4f" % round(self.cam.exposure, 4)))
 
             messageSetShutter = self.cam.SetShutter(1, 0, 0, 0)
             if messageSetShutter is not None:
-                self.eventlog(messageSetShutter)
+                post.eventlog(self, messageSetShutter)
                 return
 
             # ... functions to start acquiring ...
 
             messageStartAcquisition = self.cam.StartAcquisition()
             if messageStartAcquisition is not None:
-                self.eventlog(messageStartAcquisition)
+                post.eventlog(self, messageStartAcquisition)
                 self.cam.AbortAcquisition()
                 return
             else:
-                # self.status('Acquiring...')
+                # post.status(self, 'Acquiring...')
                 # self.Main_start_acq.setText('Stop Acquisition')
 
                 self.cam.GetAcquiredData16()
 
-                self.eventlog(str(type(self.cam.imagearray)))
+                post.eventlog(self, str(type(self.cam.imagearray)))
 
                 # self.track1 = self.cam.imagearray[0:self.cam.width-1]
                 # self.track2 = self.cam.imagearray[self.cam.width:2*self.cam.width - 1]
@@ -207,25 +207,25 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
                 # self.Main_specwin.plot(self.track2, pen='g', name='track2')
                 # self.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
 
-            self.status('Acquiring...')
+            post.status(self, 'Acquiring...')
 
         # If acquisition is to be stopped:
         elif self.Main_start_acq.text() == 'Stop Acquisition':
-            self.status('')
+            post.status(self, '')
             self.Main_start_acq.setText('Start Acquisition')
 
     def main_shutdown(self):
         messageCoolerOFF = self.cam.CoolerOFF()
         if messageCoolerOFF is not None:
-            self.eventlog(messageCoolerOFF)
+            post.eventlog(self, messageCoolerOFF)
 
         else:
-            self.eventlog('Andor: Waiting for camera to heat up (~ 2.5 minutes)...')
+            post.eventlog(self, 'Andor: Waiting for camera to heat up (~ 2.5 minutes)...')
             time.sleep(150)
 
             messageShutDown = self.cam.ShutDown()
             if messageShutDown is not None:
-                self.eventlog(messageShutDown)
+                post.eventlog(self, messageShutDown)
 
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
@@ -253,7 +253,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
         if messageSetRandomTrack is not None:
-            self.eventlog(messageSetRandomTrack)
+            post.eventlog(self, messageSetRandomTrack)
 
     def cameraoptions_openimage(self):
         pass
@@ -262,12 +262,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def spectralacq_updatetime(self):
         messageSetExposureTime = self.cam.SetExposureTime(float(self.SpectralAcq_time_req.text()))
         if messageSetExposureTime is not None:
-            self.eventlog(messageSetExposureTime)
+            post.eventlog(self, messageSetExposureTime)
 
         # To retrieve the data
         # messageGetAcquiredData16 = self.cam.GetAcquiredData16()
         # if messageGetAcquiredData16 is not None:
-        #     self.eventlog(messageGetAcquiredData16)
+        #     post.eventlog(self, messageGetAcquiredData16)
 
     def spectralacq_start(self):
         time_req = float(self.SpectralAcq_update_time.text())
@@ -285,62 +285,11 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         time_req = float(self.HyperAcq_time_req.text())
         darkfield_req = int(self.HyperAcq_darkfield.text())
 
-    # Graphing and imaging functions
-    def carsplot(self, spectrum):
-        self.Main_specwin.clear()
-        self.Main_specwin.plot(spectrum)
-
-    def carsimage(self, image):
-        self.Main_imagewin.clear()
-        self.Main_imagewin.setImage(image)
-
-    # Activate/deactivate buttons
-    def deactivate_buttons(self):
-        self.Main_start_acq.setEnabled(False)
-        self.Main_shutdown.setEnabled(False)
-        self.CameraTemp_cooler_on.setEnabled(False)
-        self.SpectraWin_sum_track.setEnabled(False)
-        self.SpectraWin_single_track.setEnabled(False)
-        self.Grating_update.setEnabled(False)
-        self.CameraOptions_openimage.setEnabled(False)
-        self.CameraOptions_update.setEnabled(False)
-        self.SpectralAcq_start.setEnabled(False)
-        self.SpectralAcq_update_time.setEnabled(False)
-        self.HyperAcq_start.setEnabled(False)
-
-    def activate_buttons(self):
-        self.Main_start_acq.setEnabled(True)
-        self.Main_shutdown.setEnabled(True)
-        self.CameraTemp_cooler_on.setEnabled(True)
-        self.SpectraWin_sum_track.setEnabled(True)
-        self.SpectraWin_single_track.setEnabled(True)
-        self.Grating_update.setEnabled(True)
-        self.CameraOptions_openimage.setEnabled(True)
-        self.CameraOptions_update.setEnabled(True)
-        self.SpectralAcq_start.setEnabled(True)
-        self.SpectralAcq_update_time.setEnabled(True)
-        self.HyperAcq_start.setEnabled(True)
-
-    # Status: defining status and eventlog functions
-    def status(self, message):
-        self.Main_status.setText(message)
-
-    def eventlog(self, message):
-        self.EventLogger_box.appendPlainText('(' + time.strftime("%H:%M:%S") + ')' + ' - ' + message)
-
-    def event_date(self):
-        self.EventLogger_box.appendPlainText(
-            '------------------------------------------------------------------------------------')
-        self.EventLogger_box.appendPlainText(
-            ' ScanCARS Software                                    Date: ' + time.strftime('%d/%m/%Y'))
-        self.EventLogger_box.appendPlainText(
-            '------------------------------------------------------------------------------------')
-
 
 def main():
     app = QApplication(sys.argv)
     form = ScanCARS()
-    form.setWindowTitle('ScanCARS v1')
+    form.setWindowTitle('ScanCARS')
     form.show()
     sys.exit(app.exec_())
 
