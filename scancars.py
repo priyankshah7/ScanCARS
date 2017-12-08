@@ -34,8 +34,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.track2 = None
         self.trackdiff = None
         self.tracksum = None
-        self.pImageArray = None
-        self.pSize = None
 
         # Main: connecting buttons to functions
         self.Main_start_acq.clicked.connect(lambda: self.main_startacq())
