@@ -6,7 +6,8 @@ from ctypes import *
 class Andor:
     def __init__(self):
         # Loading the Andor dll driver
-        self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
+        # TODO Not sure which driver to use! ........
+        self.dll = cdll.LoadLibrary("C:\Program Files\Andor SOLIS\\atmcd32d")
 
         # Storing values to be accessed outside of the functions below:
         self.width = None
@@ -387,7 +388,7 @@ class Andor:
         be large enough
         """
 
-    def GetAcquiredData16(self):
+    def GetAcquiredData16(self, dataarray):
         """
         :param imageArray:
         :return:
@@ -430,11 +431,51 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
             return 'Andor: GetAcquiredData error. No acquisition has taken place.'
 
-        imageArray = None
         for i in range(len(cimage)):
-            imageArray.append(cimage[i])
+            dataarray.append(cimage[i])
 
-        self.imagearray = imageArray[:]
+        self.imagearray = dataarray[:]
+
+        return
+
+    def GetMostRecentImage16(self, dataarray):
+        self.imagearray = None
+
+        if self.acquisitionmode == 1:
+            dim = self.width * self.randomtracks
+        else:
+            # TODO for now....
+            return
+
+        cimageArray = c_int * dim
+        cimage = cimageArray()
+
+        error = self.dll.GetMostRecentImage16(pointer(cimage), dim)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetAcquiredData error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: GetAcquiredData error. Unable to communicate with card.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetAcquiredData error. Invalid pointer (i.e. NULL).'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: GetAcquiredData error. Array size is incorrect.'
+
+        elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
+            return 'Andor: GetAcquiredData error. No acquisition has taken place.'
+
+        # for i in range(len(cimage)):
+        #     dataarray.append(cimage[i])
+
+        return cimage
+
+        self.imagearray = dataarray[:]
 
         return
 
@@ -995,14 +1036,6 @@ class Andor:
 
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: GetPreAmpGain error. Invalid index.'
-
-    def GetMostRecentImage16(self, xpx, ypx):
-        xpx = pointer(c_int())
-        ypx = pointer(c_int())
-
-        # TODO Not sure how to best proceed here...
-
-
 
 
 ERROR_CODE = {
