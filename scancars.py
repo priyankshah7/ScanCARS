@@ -14,7 +14,6 @@ from guiFunctions import toggle, post
 from guiFunctions.graphing import *
 from guiMain.InitializeAndor import *
 
-from ADwinSDK import ADwin
 from AndorSDK.pyandor import Andor
 
 
@@ -68,14 +67,14 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         post.event_date(self)
         toggle.deactivate_buttons(self)
 
+        self.post = post
+        self.threadpool = QtCore.QThreadPool()
+
         # Initializing the camera
         self.cam = Andor()
-        self.post = post
-        # self.initialize_andor()
-
-        self.threadpool = QtCore.QThreadPool()
         initializeandor = InitializeAndor(self)
         self.threadpool.start(initializeandor)
+        # TODO Working, but there's an issue with the comment showing up in the event dialog
 
         toggle.activate_buttons(self)
         # ------------------------------------------------------------------------------------------------------------
@@ -90,75 +89,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         messageShutDown = self.cam.ShutDown()
         if messageShutDown is not None:
             post.eventlog(self, messageShutDown)
-
-    # Initialization functions (Andor and ADwin)
-    def initialize_andor(self):
-        # Initializing the camera
-        messageInitialize = self.cam.Initialize()
-        if messageInitialize is not None:
-            post.eventlog(self, messageInitialize)
-            return
-
-        # Setting the shutter
-        messageSetShutter = self.cam.SetShutter(1, 2, 0, 0)
-        if messageSetShutter is not None:
-            post.eventlog(self, messageSetShutter)
-            return
-
-        # Setting read mode to Random Track and setting track positions
-        messageSetReadMode = self.cam.SetReadMode(2)
-        if messageSetReadMode is not None:
-            post.eventlog(self, messageSetReadMode)
-            return
-
-        RandomTrackposition = np.array([int(self.CameraOptions_track1lower.text()),
-                                        int(self.CameraOptions_track1upper.text()),
-                                        int(self.CameraOptions_track2lower.text()),
-                                        int(self.CameraOptions_track2upper.text())])
-
-        messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
-        if messageSetRandomTrack is not None:
-            post.eventlog(self, messageSetRandomTrack)
-            return
-
-        # Getting and setting AD channel
-        messageGetNumberADChannels = self.cam.GetNumberADChannels()
-        if messageGetNumberADChannels is not None:
-            post.eventlog(self, messageGetNumberADChannels)
-            return
-
-        messageSetADChannel = self.cam.SetADChannel(1)
-        if messageSetADChannel is not None:
-            post.eventlog(self, messageSetADChannel)
-            return
-
-        # Setting trigger mode
-        messageSetTriggerMode = self.cam.SetTriggerMode(0)
-        if messageSetRandomTrack is not None:
-            post.eventlog(self, messageSetRandomTrack)
-            return
-
-        # Getting the detector chip size
-        messageGetDetector = self.cam.GetDetector()
-        if messageGetDetector is not None:
-            post.eventlog(self, messageGetDetector)
-            return
-
-        # Setting horizontal and vertical shift speeds
-        messageSetHSSpeed = self.cam.SetHSSpeed(1, 0)
-        if messageSetHSSpeed is not None:
-            post.eventlog(self, messageSetHSSpeed)
-            return
-
-        messageSetVSSpeed = self.cam.SetVSSpeed(3)
-        if messageSetVSSpeed is not None:
-            post.eventlog(self, messageSetVSSpeed)
-            return
-
-        post.eventlog(self, 'Andor: Successfully initialized.')
-
-    def initialize_adwin(self):
-        pass
 
     # Main: defining functions
     def main_startacq(self):
@@ -233,21 +163,11 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             if messageShutDown is not None:
                 post.eventlog(self, messageShutDown)
 
-    # CameraTemp: defining functions
-    def cameratemp_cooler(self):
-        tempreq = int(self.CameraTemp_temp_req.text())
-        self.cam.SetTemperature(tempreq)
-        self.cam.CoolerON()
-
     # SpectraWin: defining functions
     def spectrawin_tracks(self):
         pass
 
     def spectrawin_sum(self):
-        pass
-
-    # Grating: defining functions
-    def grating_update(self):
         pass
 
     # CameraOptions: defining functions

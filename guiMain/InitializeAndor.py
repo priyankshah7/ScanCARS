@@ -1,14 +1,17 @@
+from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal, QObject
+
 import numpy as np
-from PyQt5.QtCore import QRunnable, pyqtSlot
+
+
+class InitializeAndorSignals(QObject):
+    finished = pyqtSignal()
 
 
 class InitializeAndor(QRunnable):
-    """
-    Worker thread
-    """
     def __init__(self, gui):
         super(InitializeAndor, self).__init__()
         self.gui = gui
+        self.signals = InitializeAndorSignals()
 
     @pyqtSlot()
     def run(self):
@@ -75,3 +78,5 @@ class InitializeAndor(QRunnable):
             return
 
         self.gui.post.eventlog(self.gui, 'Andor: Successfully initialized.')
+        # self.signals.finished.emit()
+
