@@ -61,7 +61,7 @@ class Andor:
         error = self.dll.CoolerON()
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            return 'Andor: Cooler on.'
+            pass
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: CoolerOn error. System not initialized.'
@@ -99,7 +99,6 @@ class Andor:
         cooling ON and OFF use the CoolerON and CoolerOFF functions
         """
         error = self.dll.SetTemperature(temp)
-        self.temperature = temp
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
             pass
@@ -128,6 +127,8 @@ class Andor:
         """
         temperature = c_int()
         error = self.dll.GetTemperature(temperature)
+
+        self.temperature = temperature.value
 
         if ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: GetTemperature error. System not initialized.'

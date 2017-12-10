@@ -12,7 +12,7 @@ from PyQt5 import QtCore
 from guiForms import WindowMAIN
 from guiFunctions import toggle, post
 from guiFunctions.graphing import *
-from guiMain.InitializeAndor import *
+from guiMain import Initialize, Main, CameraTemp, Grating, CameraOptions, SpectralAcq, HyperAcq
 
 from AndorSDK.pyandor import Andor
 
@@ -28,7 +28,13 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             # Required to use maths functions instead of numpy
         # TODO Move all non-GUI functions to separate threads
 
+        # TODO Reconsidering separating main functions completely.......
+
         # ------------------------------------------------------------------------------------------------------------
+        # Importing relevant methods and classes
+        self.post = post
+        self.threadpool = QtCore.QThreadPool()
+
         # Creating variables for tracks (perhaps create function here instead)
         self.track1 = None
         self.track2 = None
@@ -65,18 +71,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
         # Startup Processes
         post.event_date(self)
-        toggle.deactivate_buttons(self)
-
-        self.post = post
-        self.threadpool = QtCore.QThreadPool()
 
         # Initializing the camera
         self.cam = Andor()
-        initializeandor = InitializeAndor(self)
-        self.threadpool.start(initializeandor)
+        self.initialize_andor()
         # TODO Working, but there's an issue with the comment showing up in the event dialog
 
-        toggle.activate_buttons(self)
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
@@ -89,6 +89,17 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         messageShutDown = self.cam.ShutDown()
         if messageShutDown is not None:
             post.eventlog(self, messageShutDown)
+
+    # Initialize: defining functions
+    def initialize_andor(self):
+        initialize = Initialize.Andor(self)
+        self.threadpool.start(initialize)
+        initialize.signals.finished.connect(lambda: initialize_event())
+
+        def initialize_event():
+            post.eventlog(self, 'Andor: Successfully initialized.')
+            gettemperature = CameraTemp.AndorTemperature(self)
+            self.threadpool.start(gettemperature)
 
     # Main: defining functions
     def main_startacq(self):
@@ -151,17 +162,57 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             self.Main_start_acq.setText('Start Acquisition')
 
     def main_shutdown(self):
-        messageCoolerOFF = self.cam.CoolerOFF()
-        if messageCoolerOFF is not None:
-            post.eventlog(self, messageCoolerOFF)
+        messageIsCoolerOn = self.cam.IsCoolerOn()
+        if messageIsCoolerOn is not None:
+            post.eventlog(self, messageIsCoolerOn)
 
         else:
-            post.eventlog(self, 'Andor: Waiting for camera to heat up (~ 2.5 minutes)...')
-            time.sleep(150)
+            if self.cam.coolerstatus == 0:
+                messageShutDown = self.cam.ShutDown()
+                if messageShutDown is not None:
+                    post.eventlog(self, messageShutDown)
 
-            messageShutDown = self.cam.ShutDown()
-            if messageShutDown is not None:
-                post.eventlog(self, messageShutDown)
+                post.eventlog(self, 'ScanCARS can now be safely closed.')
+
+            elif self.cam.coolerstatus == 1:
+                cooleroff = CameraTemp.CoolerOff(self)
+                self.threadpool.start(cooleroff)
+                cooleroff.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler switched off...'))
+                self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
+
+                post.eventlog(self, '...waiting for the camera to heat up to -20C')
+
+                while self.cam.temperature < -20:
+                    pass
+
+                else:
+                    messageShutDown = self.cam.ShutDown()
+                    if messageShutDown is not None:
+                        post.eventlog(self, messageShutDown)
+
+                post.eventlog(self, 'ScanCARS can now be safely closed.')
+
+    # CameraTemp: defining functions
+    def cameratemp_cooler(self):
+        messageIsCoolerOn = self.cam.IsCoolerOn()
+        if messageIsCoolerOn is not None:
+            post.eventlog(self, messageIsCoolerOn)
+
+        else:
+            if self.cam.coolerstatus == 0:
+                cooleron = CameraTemp.CoolerOn(self)
+                self.threadpool.start(cooleron)
+                cooleron.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler on.'))
+                self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #323e30}")
+
+            elif self.cam.coolerstatus == 1:
+                cooleroff = CameraTemp.CoolerOff(self)
+                self.threadpool.start(cooleroff)
+                cooleroff.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler switched off.'))
+                self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
+
+            else:
+                post.eventlog(self, 'An error has occured. Possibly related to the GUI itself?')
 
     # SpectraWin: defining functions
     def spectrawin_tracks(self):
@@ -170,19 +221,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def spectrawin_sum(self):
         pass
 
+    # Grating: defining functions
+
     # CameraOptions: defining functions
     def cameraoptions_update(self):
-        RandomTrackposition = [int(self.CameraOptions_track1lower.text()),
-                               int(self.CameraOptions_track1upper.text()),
-                               int(self.CameraOptions_track2lower.text()),
-                               int(self.CameraOptions_track2upper.text())]
-
-        messageSetRandomTrack = self.cam.SetRandomTracks(2, RandomTrackposition)
-        if messageSetRandomTrack is not None:
-            post.eventlog(self, messageSetRandomTrack)
-
-    def cameraoptions_openimage(self):
-        pass
+        update = CameraOptions.Update(self)
+        self.threadpool.start(update)
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):

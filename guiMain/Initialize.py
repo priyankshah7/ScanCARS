@@ -1,20 +1,22 @@
 from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal, QObject
 
 import numpy as np
+from guiFunctions import toggle
 
-
-class InitializeAndorSignals(QObject):
+class AndorSignals(QObject):
     finished = pyqtSignal()
 
 
-class InitializeAndor(QRunnable):
+class Andor(QRunnable):
     def __init__(self, gui):
-        super(InitializeAndor, self).__init__()
+        super(Andor, self).__init__()
         self.gui = gui
-        self.signals = InitializeAndorSignals()
+        self.signals = AndorSignals()
 
     @pyqtSlot()
     def run(self):
+        toggle.deactivate_buttons(self.gui)
+
         # Initializing the camera
         messageInitialize = self.gui.cam.Initialize()
         if messageInitialize is not None:
@@ -77,6 +79,6 @@ class InitializeAndor(QRunnable):
             self.gui.post.eventlog(self.gui, messageSetVSSpeed)
             return
 
-        self.gui.post.eventlog(self.gui, 'Andor: Successfully initialized.')
-        # self.signals.finished.emit()
+        toggle.activate_buttons(self.gui)
+        self.signals.finished.emit()
 
