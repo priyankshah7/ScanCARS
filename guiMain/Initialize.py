@@ -3,6 +3,7 @@ from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal, QObject
 import numpy as np
 from guiFunctions import toggle
 
+
 class AndorSignals(QObject):
     finished = pyqtSignal()
 

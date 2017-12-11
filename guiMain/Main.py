@@ -23,6 +23,8 @@ class StartAcq(QRunnable):
     @pyqtSlot()
     def stop(self):
         self.condition = False
+        self.gui.post.status(self.gui, '')
+        self.gui.Main_start_acq.setText('Start Acquisition')
         # TODO add code to stop acquisition as well
 
     @pyqtSlot()
@@ -44,6 +46,9 @@ class StartAcq(QRunnable):
             self.gui.post.eventlog(self.gui, messageSetShutter)
             return
 
+        self.gui.post.status(self.gui, 'Acquiring...')
+        self.gui.Main_start_acq.setText('Stop Acquisition')
+
         while self.condition:
             messageSetExposureTime = self.gui.cam.SetExposureTime(self.exposurereq)
             if messageSetExposureTime is not None:
@@ -57,9 +62,6 @@ class StartAcq(QRunnable):
                 return
 
             else:
-                self.gui.post.eventlog(self.gui, 'Acquiring...')
-                self.gui.Main_start_acq.setText('Stop Acquisition')
-
                 self.gui.cam.GetAcquiredData16()
 
                 self.gui.post.eventlog(self.gui, str(type(self.gui.cam.imagearray)))
@@ -76,8 +78,6 @@ class StartAcq(QRunnable):
                 # self.Main_specwin.plot(self.track2, pen='g', name='track2')
                 # self.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
 
-            self.gui.post.status(self.gui, 'Acquiring...')
-
 
 class Shutdown(QRunnable):
     def __init__(self, gui):
@@ -86,14 +86,8 @@ class Shutdown(QRunnable):
 
     @pyqtSlot()
     def run(self):
+        # TODO Do this here or on the GUI thread??
         messageCoolerOFF = self.gui.cam.CoolerOFF()
         if messageCoolerOFF is not None:
             self.gui.post.eventlog(self.gui, messageCoolerOFF)
 
-        else:
-            self.gui.post.eventlog(self.gui, 'Andor: Waiting for camera to heat up (~2.5 minutes)...')
-            time.sleep(150)
-
-            messageShutDown = self.gui.cam.ShutDown()
-            if messageShutDown is not None:
-                self.gui.post.eventlog(self.gui, messageShutDown)
