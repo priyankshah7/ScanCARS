@@ -26,4 +26,8 @@ class OpenImage(QRunnable):
 
     @pyqtSlot()
     def run(self):
-        pass
+        messageSetAcquisitionMode = self.gui.cam.SetAcquisitionMode(1)
+        nessageSetReadMode = self.gui.cam.SetReadMode(4)
+        messageStartAcquisition = self.gui.cam.StartAcquisition()
+        messageGetAcquiredData = self.gui.cam.GetAcquiredData()
+

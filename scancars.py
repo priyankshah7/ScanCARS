@@ -34,6 +34,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # Importing relevant methods and classes
         self.post = post
         self.threadpool = QtCore.QThreadPool()
+        self.acquiring = False
 
         # Creating variables for tracks (perhaps create function here instead)
         self.track1 = None
@@ -103,63 +104,15 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # Main: defining functions
     def main_startacq(self):
-        # If acquisition is not alreadly running:
-        if self.Main_start_acq.text() == 'Start Acquisition':
-            # Setting the acquisition mode to single scan
-            messageSetAcquisitionMode = self.cam.SetAcquisitionMode(1)
-            if messageSetAcquisitionMode is not None:
-                post.eventlog(self, messageSetAcquisitionMode)
-                return
+        if self.acquiring is False:
+            startacq = Main.StartAcq(self)
+            self.threadpool.start(startacq)
+            self.acquiring = True
 
-            messageSetExposureTime = self.cam.SetExposureTime(float(self.SpectralAcq_time_req.text()))
-            if messageSetExposureTime is not None:
-                post.eventlog(self, messageSetExposureTime)
-                return
-
-            messageGetAcquisitionTimings = self.cam.GetAcquisitionTimings()
-            if messageGetAcquisitionTimings is not None:
-                post.eventlog(self, messageGetAcquisitionTimings)
-                return
-            else:
-                self.SpectralAcq_actual_time.setText(str("%.4f" % round(self.cam.exposure, 4)))
-
-            messageSetShutter = self.cam.SetShutter(1, 0, 0, 0)
-            if messageSetShutter is not None:
-                post.eventlog(self, messageSetShutter)
-                return
-
-            # ... functions to start acquiring ...
-
-            messageStartAcquisition = self.cam.StartAcquisition()
-            if messageStartAcquisition is not None:
-                post.eventlog(self, messageStartAcquisition)
-                self.cam.AbortAcquisition()
-                return
-            else:
-                # post.status(self, 'Acquiring...')
-                # self.Main_start_acq.setText('Stop Acquisition')
-
-                self.cam.GetAcquiredData16()
-
-                post.eventlog(self, str(type(self.cam.imagearray)))
-
-                # self.track1 = self.cam.imagearray[0:self.cam.width-1]
-                # self.track2 = self.cam.imagearray[self.cam.width:2*self.cam.width - 1]
-                # self.trackdiff = self.track2 - self.track1
-                # self.tracksum = self.track1 + self.track2
-
-                # # Plotting tracks and different spectra
-                # self.Main_specwin.clear()
-                # self.Main_specwin.plot(self.track1, pen='r', name='track1')
-                # self.Main_specwin.plot(self.track2, pen='g', name='track2')
-                # self.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
-
-            post.status(self, 'Acquiring...')
-
-        # If acquisition is to be stopped:
-        elif self.Main_start_acq.text() == 'Stop Acquisition':
-            post.status(self, '')
-            self.Main_start_acq.setText('Start Acquisition')
+        elif self.acquiring is True:
+            startacq = Main.StartAcq(self)
+            startacq.stop()
+            self.acquiring = False
 
     def main_shutdown(self):
         messageIsCoolerOn = self.cam.IsCoolerOn()
@@ -177,9 +130,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             elif self.cam.coolerstatus == 1:
                 cooleroff = CameraTemp.CoolerOff(self)
                 self.threadpool.start(cooleroff)
-                cooleroff.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler switched off...'))
-                self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
-
+                cooleroff.signals.finished.connect(
+                    lambda: self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}"))
                 post.eventlog(self, '...waiting for the camera to heat up to -20C')
 
                 while self.cam.temperature < -20:
@@ -222,11 +174,17 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         pass
 
     # Grating: defining functions
+    def grating_update(self):
+        pass
 
     # CameraOptions: defining functions
     def cameraoptions_update(self):
         update = CameraOptions.Update(self)
         self.threadpool.start(update)
+
+    def cameraoptions_openimage(self):
+        openimage = CameraOptions.OpenImage(self)
+        self.threadpool.start(openimage)
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
