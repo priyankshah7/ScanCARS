@@ -9,7 +9,7 @@ import pyqtgraph as pg
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import QtCore
 
-from guiForms import WindowMAIN
+from guiForms import WindowMAIN, gui_camera, gui_specsum, gui_spectracks
 from guiFunctions import toggle, post
 from guiFunctions.graphing import *
 from guiMain import Initialize, Main, CameraTemp, Grating, CameraOptions, SpectralAcq, HyperAcq
@@ -41,6 +41,11 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.track2 = None
         self.trackdiff = None
         self.tracksum = None
+
+        # Creating variables to store instances of the camera and track/sum dialogs
+        self.wincamera = None
+        self.winspectracks = None
+        self.winspecsum = None
 
         # Main: connecting buttons to functions
         self.Main_start_acq.clicked.connect(lambda: self.main_startacq())
@@ -76,8 +81,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # Initializing the camera
         self.cam = Andor()
         self.initialize_andor()
-        # TODO Working, but there's an issue with the comment showing up in the event dialog
-
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
@@ -95,9 +98,9 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def initialize_andor(self):
         initialize = Initialize.Andor(self)
         self.threadpool.start(initialize)
-        initialize.signals.finished.connect(lambda: initialize_event())
+        initialize.signals.finished.connect(lambda: initialize_gettemp())
 
-        def initialize_event():
+        def initialize_gettemp():
             post.eventlog(self, 'Andor: Successfully initialized.')
             gettemperature = CameraTemp.AndorTemperature(self)
             self.threadpool.start(gettemperature)
@@ -168,10 +171,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # SpectraWin: defining functions
     def spectrawin_tracks(self):
-        pass
+        self.winspectracks = gui_spectracks.SPECTRACKS()
+        self.winspectracks.show()
 
     def spectrawin_sum(self):
-        pass
+        self.winspecsum = gui_specsum.SPECSUM()
+        self.winspecsum.show()
 
     # Grating: defining functions
     def grating_update(self):
@@ -183,8 +188,10 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.threadpool.start(update)
 
     def cameraoptions_openimage(self):
-        openimage = CameraOptions.OpenImage(self)
-        self.threadpool.start(openimage)
+        # openimage = CameraOptions.OpenImage(self)
+        # self.threadpool.start(openimage)
+        self.wincamera = gui_camera.CAMERA()
+        self.wincamera.show()
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
@@ -203,15 +210,9 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # HyperAcq: defining functions
     def hyperacq_start(self):
-        xpixel = int(self.HyperAcq_xpixel.text())
-        ypixel = int(self.HyperAcq_ypixel.text())
-        zpixel = int(self.HyperAcq_zpixel.text())
-
-        xystep = float(self.HyperAcq_xystep.text())
-        zstep = float(self.HyperAcq_zstep.text())
-
-        time_req = float(self.HyperAcq_time_req.text())
-        darkfield_req = int(self.HyperAcq_darkfield.text())
+        hypstart = HyperAcq.Start()
+        self.threadpool.start(hypstart)
+        hypstart.signals.finished.connect(lambda: None)
 
 
 def main():
