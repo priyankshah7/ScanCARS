@@ -172,10 +172,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     # SpectraWin: defining functions
     def spectrawin_tracks(self):
         self.winspectracks = gui_spectracks.SPECTRACKS()
+        self.winspectracks.setWindowTitle('Individual Tracks Spectra')
         self.winspectracks.show()
 
     def spectrawin_sum(self):
         self.winspecsum = gui_specsum.SPECSUM()
+        self.winspecsum.setWindowTitle('Sum Track Spectrum')
         self.winspecsum.show()
 
     # Grating: defining functions
@@ -191,26 +193,22 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # openimage = CameraOptions.OpenImage(self)
         # self.threadpool.start(openimage)
         self.wincamera = gui_camera.CAMERA()
+        self.wincamera.setWindowTitle('Live CCD Video')
         self.wincamera.show()
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
-        messageSetExposureTime = self.cam.SetExposureTime(float(self.SpectralAcq_time_req.text()))
-        if messageSetExposureTime is not None:
-            post.eventlog(self, messageSetExposureTime)
-
-        # To retrieve the data
-        # messageGetAcquiredData16 = self.cam.GetAcquiredData16()
-        # if messageGetAcquiredData16 is not None:
-        #     post.eventlog(self, messageGetAcquiredData16)
+        updatetime = SpectralAcq.UpdateTime(self)
+        self.threadpool.start(updatetime)
 
     def spectralacq_start(self):
-        time_req = float(self.SpectralAcq_update_time.text())
-        darkfield_req = int(self.SpectralAcq_darkfield.text())
+        specstart = SpectralAcq.Start(self)
+        self.threadpool.start(specstart)
+        specstart.signals.finished.connect(lambda: None)
 
     # HyperAcq: defining functions
     def hyperacq_start(self):
-        hypstart = HyperAcq.Start()
+        hypstart = HyperAcq.Start(self)
         self.threadpool.start(hypstart)
         hypstart.signals.finished.connect(lambda: None)
 

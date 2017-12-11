@@ -78,6 +78,10 @@ class StartAcq(QRunnable):
                 # self.Main_specwin.plot(self.track2, pen='g', name='track2')
                 # self.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
 
+            # TODO When completing the above, add checks to see if spectracks/specwin is open
+                # isVis = self.winspectracks.isVisisble()
+                # if the window is open it will return True (else it'll return False)
+
 
 class Shutdown(QRunnable):
     def __init__(self, gui):
