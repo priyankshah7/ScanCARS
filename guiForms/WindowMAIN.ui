@@ -1014,14 +1014,17 @@ QPushButton:pressed {
        <height>21</height>
       </rect>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
      <property name="decimals">
-      <number>4</number>
+      <number>3</number>
      </property>
      <property name="singleStep">
-      <double>0.000500000000000</double>
+      <double>0.010000000000000</double>
      </property>
      <property name="value">
-      <double>0.005000000000000</double>
+      <double>0.050000000000000</double>
      </property>
     </widget>
    </widget>
@@ -1400,14 +1403,17 @@ QPushButton:pressed {
        <height>21</height>
       </rect>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
      <property name="decimals">
-      <number>4</number>
+      <number>3</number>
      </property>
      <property name="singleStep">
-      <double>0.000500000000000</double>
+      <double>0.010000000000000</double>
      </property>
      <property name="value">
-      <double>0.005000000000000</double>
+      <double>0.050000000000000</double>
      </property>
     </widget>
    </widget>
