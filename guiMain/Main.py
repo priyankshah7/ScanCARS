@@ -61,36 +61,37 @@ class StartAcq(QRunnable):
 
         self.exposurereq = float(self.gui.SpectralAcq_time_req.text())
 
-        # while self.condition:
-        messageSetExposureTime = self.gui.cam.SetExposureTime(self.exposurereq)
-        if messageSetExposureTime is not None:
-            self.gui.post.eventlog(self.gui, messageSetExposureTime)
-            return
+        while self.condition:
+            messageSetExposureTime = self.gui.cam.SetExposureTime(self.exposurereq)
+            if messageSetExposureTime is not None:
+                self.gui.post.eventlog(self.gui, messageSetExposureTime)
+                return
 
-        messageStartAcquisition = self.gui.cam.StartAcquisition()
-        if messageStartAcquisition is not None:
-            self.gui.post.eventlog(self.gui, messageStartAcquisition)
-            self.gui.cam.AbortAcquisition()
-            return
+            messageStartAcquisition = self.gui.cam.StartAcquisition()
+            if messageStartAcquisition is not None:
+                self.gui.post.eventlog(self.gui, messageStartAcquisition)
+                self.gui.cam.AbortAcquisition()
+                return
 
-        time.sleep(self.exposurereq)
+            time.sleep(self.exposurereq)
 
-        messageGetStatus = self.gui.cam.GetStatus()
-        # if messageGetStatus == 'DRV_IDLE':
-        messageGetAcquiredData16 = self.gui.cam.GetAcquiredData16()
-        if messageGetAcquiredData16 is not None:
-            self.gui.post.eventlog(self.gui, messageGetAcquiredData16)
-            return
-        else:
-            self.track1 = self.gui.cam.imagearray[0:self.width-1]
-            self.track2 = self.gui.cam.imagearray[self.width:2 * self.width - 1]
-            self.trackdiff = self.track2 - self.track1
-            self.tracksum = self.track1 + self.track2
+            messageGetStatus = self.gui.cam.GetStatus()
+            if messageGetStatus == 'DRV_IDLE':
+                messageGetAcquiredData16 = self.gui.cam.GetAcquiredData16()
+                if messageGetAcquiredData16 is not None:
+                    self.gui.post.eventlog(self.gui, messageGetAcquiredData16)
+                    return
 
-            self.gui.Main_specwin.clear()
-            self.gui.Main_specwin.plot(self.track1, pen='r', name='track1')
-            self.gui.Main_specwin.plot(self.track2, pen='g', name='track2')
-            self.gui.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
+                else:
+                    self.track1 = self.gui.cam.imagearray[0:self.width-1]
+                    self.track2 = self.gui.cam.imagearray[self.width:2 * self.width - 1]
+                    self.trackdiff = self.track2 - self.track1
+                    self.tracksum = self.track1 + self.track2
+
+                    self.gui.Main_specwin.clear()
+                    self.gui.Main_specwin.plot(self.track1, pen='r', name='track1')
+                    self.gui.Main_specwin.plot(self.track2, pen='g', name='track2')
+                    self.gui.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
 
             # TODO Need to include GetStatus() here as well to know when the acquisition is complete
 
