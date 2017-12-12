@@ -59,7 +59,7 @@ class Andor(QRunnable):
 
         # Setting trigger mode
         messageSetTriggerMode = self.gui.cam.SetTriggerMode(0)
-        if messageSetRandomTrack is not None:
+        if messageSetTriggerMode is not None:
             self.gui.post.eventlog(self.gui, messageSetRandomTrack)
             return
 

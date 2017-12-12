@@ -8,7 +8,12 @@ class StartAcq(QRunnable):
         super(StartAcq, self).__init__()
         self.gui = gui
         self.condition = True
-        self.exposurereq = float(self.gui.SpectralAcq_time_req.text())
+        self.exposurereq = None
+        self.width = self.gui.cam.width
+        self.track1 = None
+        self.track2 = None
+        self.trackdiff = None
+        self.tracksum = None
 
     @pyqtSlot()
     def exposure(self):
@@ -25,6 +30,11 @@ class StartAcq(QRunnable):
         self.condition = False
         self.gui.post.status(self.gui, '')
         self.gui.Main_start_acq.setText('Start Acquisition')
+
+        messageGetStatus = self.gui.cam.GetStatus()
+        if messageGetStatus == 'DRV_ACQUIRING':
+            self.gui.cam.AbortAcquisition()
+
         # TODO add code to stop acquisition as well
 
     @pyqtSlot()
@@ -41,7 +51,7 @@ class StartAcq(QRunnable):
         else:
             self.gui.SpectralAcq_actual_time.setText(str("%.4f" % round(self.gui.cam.exposure, 4)))
 
-        messageSetShutter = self.gui.cam.SetShutter(1, 0, 0, 0)
+        messageSetShutter = self.gui.cam.SetShutter(1, 1, 0, 0)
         if messageSetShutter is not None:
             self.gui.post.eventlog(self.gui, messageSetShutter)
             return
@@ -49,34 +59,40 @@ class StartAcq(QRunnable):
         self.gui.post.status(self.gui, 'Acquiring...')
         self.gui.Main_start_acq.setText('Stop Acquisition')
 
-        while self.condition:
-            messageSetExposureTime = self.gui.cam.SetExposureTime(self.exposurereq)
-            if messageSetExposureTime is not None:
-                self.gui.post.eventlog(self.gui, messageSetExposureTime)
-                return
+        self.exposurereq = float(self.gui.SpectralAcq_time_req.text())
 
-            messageStartAcquisition = self.gui.cam.StartAcquisition()
-            if messageStartAcquisition is not None:
-                self.gui.post.eventlog(self.gui, messageStartAcquisition)
-                self.gui.cam.AbortAcquisition()
-                return
+        # while self.condition:
+        messageSetExposureTime = self.gui.cam.SetExposureTime(self.exposurereq)
+        if messageSetExposureTime is not None:
+            self.gui.post.eventlog(self.gui, messageSetExposureTime)
+            return
 
-            else:
-                self.gui.cam.GetAcquiredData16()
+        messageStartAcquisition = self.gui.cam.StartAcquisition()
+        if messageStartAcquisition is not None:
+            self.gui.post.eventlog(self.gui, messageStartAcquisition)
+            self.gui.cam.AbortAcquisition()
+            return
 
-                self.gui.post.eventlog(self.gui, str(type(self.gui.cam.imagearray)))
+        time.sleep(self.exposurereq)
 
-                # TODO if using, make sure to include self.gui
-                # self.track1 = self.cam.imagearray[0:self.cam.width-1]
-                # self.track2 = self.cam.imagearray[self.cam.width:2*self.cam.width - 1]
-                # self.trackdiff = self.track2 - self.track1
-                # self.tracksum = self.track1 + self.track2
+        messageGetStatus = self.gui.cam.GetStatus()
+        # if messageGetStatus == 'DRV_IDLE':
+        messageGetAcquiredData16 = self.gui.cam.GetAcquiredData16()
+        if messageGetAcquiredData16 is not None:
+            self.gui.post.eventlog(self.gui, messageGetAcquiredData16)
+            return
+        else:
+            self.track1 = self.gui.cam.imagearray[0:self.width-1]
+            self.track2 = self.gui.cam.imagearray[self.width:2 * self.width - 1]
+            self.trackdiff = self.track2 - self.track1
+            self.tracksum = self.track1 + self.track2
 
-                # # Plotting tracks and different spectra
-                # self.Main_specwin.clear()
-                # self.Main_specwin.plot(self.track1, pen='r', name='track1')
-                # self.Main_specwin.plot(self.track2, pen='g', name='track2')
-                # self.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
+            self.gui.Main_specwin.clear()
+            self.gui.Main_specwin.plot(self.track1, pen='r', name='track1')
+            self.gui.Main_specwin.plot(self.track2, pen='g', name='track2')
+            self.gui.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
+
+            # TODO Need to include GetStatus() here as well to know when the acquisition is complete
 
             # TODO When completing the above, add checks to see if spectracks/specwin is open
                 # isVis = self.winspectracks.isVisisble()

@@ -196,6 +196,9 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.wincamera.setWindowTitle('Live CCD Video')
         self.wincamera.show()
 
+        openimage = CameraOptions.OpenImage(self)
+        self.threadpool.start(openimage)
+
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
         updatetime = SpectralAcq.UpdateTime(self)

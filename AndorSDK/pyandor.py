@@ -1,12 +1,12 @@
 # Python version of the Andor SDK
 
 from ctypes import *
+import numpy as np
 
 
 class Andor:
     def __init__(self):
         # Loading the Andor dll driver
-        # TODO Not sure which driver to use! ........
         self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
 
         # Storing values to be accessed outside of the functions below:
@@ -33,8 +33,7 @@ class Andor:
     # NOTE That EM functions will now not be included as The Newton 920DUP-OE doesn't have EM
 
     def Initialize(self):
-        tekst = c_char()
-        error = self.dll.Initialize(byref(tekst))
+        error = self.dll.Initialize("C:\\Program Files\\Andor iXon")
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
             pass
@@ -126,7 +125,7 @@ class Andor:
         It also gives the status of the cooling process.
         """
         temperature = c_int()
-        error = self.dll.GetTemperature(temperature)
+        error = self.dll.GetTemperature(byref(temperature))
 
         self.temperature = temperature.value
 
@@ -178,7 +177,7 @@ class Andor:
         error = self.dll.SetAcquisitionMode(mode)
 
         if ERROR_CODE[error] == 'DRV_SUCCESS':
-            pass
+            self.acquisitionmode = mode
 
         elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
             return 'Andor: SetAcquisitionMode error. System not initialized.'
@@ -389,7 +388,7 @@ class Andor:
         be large enough
         """
 
-    def GetAcquiredData16(self, dataarray):
+    def GetAcquiredData16(self):
         """
         :param imageArray:
         :return:
@@ -432,10 +431,8 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
             return 'Andor: GetAcquiredData error. No acquisition has taken place.'
 
-        for i in range(len(cimage)):
-            dataarray.append(cimage[i])
-
-        self.imagearray = dataarray[:]
+        self.imagearray = cimage[:]
+        self.imagearray = np.asarray(self.imagearray, dtype=np.uint16)
 
         return
 

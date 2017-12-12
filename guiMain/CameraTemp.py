@@ -68,11 +68,17 @@ class AndorTemperature(QRunnable):
     @pyqtSlot()
     def run(self):
         self.condition = True
+
         while self.condition:
-            messageGetTemperature = self.gui.cam.GetTemperature()
-            if messageGetTemperature is not None:
-                self.gui.post.eventlog(self.gui, messageGetTemperature)
-                return
+            messageGetStatus = self.gui.cam.GetStatus()
+            if messageGetStatus == 'DRV_ACQUIRING':
+                pass
+
             else:
-                self.gui.CameraTemp_temp_actual.setText(str(self.gui.cam.temperature))
-                time.sleep(2)
+                messageGetTemperature = self.gui.cam.GetTemperature()
+                if messageGetTemperature is not None:
+                    self.gui.post.eventlog(self.gui, messageGetTemperature)
+                    return
+                else:
+                    self.gui.CameraTemp_temp_actual.setText(str(self.gui.cam.temperature))
+                    time.sleep(2)
