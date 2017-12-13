@@ -3,18 +3,16 @@
 # Priyank Shah - King's College London
 
 import sys
-import time
-import numpy as np
-import pyqtgraph as pg
-from PyQt5.QtWidgets import QApplication, QMainWindow
+
 from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from forms import WindowMAIN, gui_camera, gui_specsum
+from utils import post
+from utils.graphing import *
+from threads import Initialize, Main, CameraTemp, CameraOptions, SpectralAcq, HyperAcq
 
-from guiForms import WindowMAIN, gui_camera, gui_specsum, gui_spectracks
-from guiFunctions import toggle, post
-from guiFunctions.graphing import *
-from guiMain import Initialize, Main, CameraTemp, Grating, CameraOptions, SpectralAcq, HyperAcq
-
-from AndorSDK.pyandor import Andor
+from andorsdk.pyandor import Andor
+from scancars.forms import gui_spectracks
 
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):

@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow
-from guiForms import WindowSPECSUM
+
+from scancars.forms import WindowSPECSUM
 
 
 class SPECSUM(QMainWindow, WindowSPECSUM.Ui_Dialog):

@@ -44,13 +44,6 @@ class StartAcq(QRunnable):
             self.gui.post.eventlog(self.gui, messageSetAcquisitionMode)
             return
 
-        messageGetAcquisitionTimings = self.gui.cam.GetAcquisitionTimings()
-        if messageGetAcquisitionTimings is not None:
-            self.gui.post.eventlog(self.gui, messageGetAcquisitionTimings)
-            return
-        else:
-            self.gui.SpectralAcq_actual_time.setText(str("%.4f" % round(self.gui.cam.exposure, 4)))
-
         messageSetShutter = self.gui.cam.SetShutter(1, 1, 0, 0)
         if messageSetShutter is not None:
             self.gui.post.eventlog(self.gui, messageSetShutter)
@@ -62,10 +55,17 @@ class StartAcq(QRunnable):
         self.exposurereq = float(self.gui.SpectralAcq_time_req.text())
 
         while self.condition:
-            messageSetExposureTime = self.gui.cam.SetExposureTime(self.exposurereq)
-            if messageSetExposureTime is not None:
-                self.gui.post.eventlog(self.gui, messageSetExposureTime)
-                return
+            # messageSetExposureTime = self.gui.cam.SetExposureTime(self.exposurereq)
+            # if messageSetExposureTime is not None:
+            #     self.gui.post.eventlog(self.gui, messageSetExposureTime)
+            #     return
+            #
+            # messageGetAcquisitionTimings = self.gui.cam.GetAcquisitionTimings()
+            # if messageGetAcquisitionTimings is not None:
+            #     self.gui.post.eventlog(self.gui, messageGetAcquisitionTimings)
+            #     return
+            # else:
+            #     self.gui.SpectralAcq_actual_time.setText(str("%.4f" % round(self.gui.cam.exposure, 4)))
 
             messageStartAcquisition = self.gui.cam.StartAcquisition()
             if messageStartAcquisition is not None:
@@ -77,9 +77,9 @@ class StartAcq(QRunnable):
 
             messageGetStatus = self.gui.cam.GetStatus()
             if messageGetStatus == 'DRV_IDLE':
-                messageGetAcquiredData16 = self.gui.cam.GetAcquiredData16()
-                if messageGetAcquiredData16 is not None:
-                    self.gui.post.eventlog(self.gui, messageGetAcquiredData16)
+                messageGetAcquiredData = self.gui.cam.GetAcquiredData()
+                if messageGetAcquiredData is not None:
+                    self.gui.post.eventlog(self.gui, messageGetAcquiredData)
                     return
 
                 else:

@@ -25,6 +25,7 @@ class Andor:
         self.acquisitionmode = None
         self.randomtracks = None
         self.imagearray = None
+        self.imagearray16 = None
 
     def __del__(self):
         error = self.dll.ShutDown()
@@ -378,7 +379,7 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_SPOOLSETUPERROR':
             return 'Andor: StartAcquisition error. Error with spool settings.'
 
-    def GetAcquiredData(self, imageArray):
+    def GetAcquiredData(self):
         """
         :param imageArray:
         :return:
@@ -387,6 +388,42 @@ class Andor:
         are returned as long integers (32bit signed integers). The array must
         be large enough
         """
+        self.imagearray = None
+
+        if self.acquisitionmode == 1:
+            dim = self.width * self.randomtracks
+        else:
+            # TODO for now....
+            return
+
+        cimageArray = c_int * dim
+        cimage = cimageArray()
+
+        error = self.dll.GetAcquiredData(pointer(cimage), dim)
+
+        if ERROR_CODE[error] == 'DRV_SUCCESS':
+            pass
+
+        elif ERROR_CODE[error] == 'DRV_NOT_INITIALIZED':
+            return 'Andor: GetAcquiredData error. System not initialized.'
+
+        elif ERROR_CODE[error] == 'DRV_ACQUIRING':
+            return 'Andor: GetAcquiredData error. Acquisition in progress.'
+
+        elif ERROR_CODE[error] == 'DRV_ERROR_ACK':
+            return 'Andor: GetAcquiredData error. Unable to communicate with card.'
+
+        elif ERROR_CODE[error] == 'DRV_P1INVALID':
+            return 'Andor: GetAcquiredData error. Invalid pointer (i.e. NULL).'
+
+        elif ERROR_CODE[error] == 'DRV_P2INVALID':
+            return 'Andor: GetAcquiredData error. Array size is incorrect.'
+
+        elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
+            return 'Andor: GetAcquiredData error. No acquisition has taken place.'
+
+        self.imagearray = cimage[:]
+        self.imagearray = np.asarray(self.imagearray, dtype=np.uint32)
 
     def GetAcquiredData16(self):
         """
@@ -397,7 +434,7 @@ class Andor:
         are returned as long integers (16bit signed integers). The array must
         be large enough
         """
-        self.imagearray = None
+        self.imagearray16 = None
 
         if self.acquisitionmode == 1:
             dim = self.width * self.randomtracks
@@ -431,10 +468,8 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
             return 'Andor: GetAcquiredData error. No acquisition has taken place.'
 
-        self.imagearray = cimage[:]
-        self.imagearray = np.asarray(self.imagearray, dtype=np.uint16)
-
-        return
+        self.imagearray16 = cimage[:]
+        self.imagearray16 = np.asarray(self.imagearray, dtype=np.uint16)
 
     def GetMostRecentImage16(self, dataarray):
         self.imagearray = None
