@@ -7,4 +7,4 @@ install:
   - pip install -r requirements.txt
 
 script:
-  - pytest
+  - tests/scancars_test.py
