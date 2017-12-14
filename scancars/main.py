@@ -3,16 +3,14 @@
 # Priyank Shah - King's College London
 
 import sys
-
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from forms import WindowMAIN, gui_camera, gui_specsum
-from utils import post
-from utils.graphing import *
-from threads import Initialize, Main, CameraTemp, CameraOptions, SpectralAcq, HyperAcq
+
+from scancars.forms import WindowMAIN, gui_camera, gui_specsum, gui_spectracks
+from scancars.utils import post, toggle, graphing
+from scancars.threads import Initialize, Main, CameraTemp, CameraOptions, SpectralAcq, HyperAcq
 
 from andorsdk.pyandor import Andor
-from scancars.forms import gui_spectracks
 
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
@@ -21,7 +19,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.setupUi(self)
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
-        # TODO Change textboxes to spin boxes where relevant
         # TODO If speed becomes an issue, consider using numba package with jit decorator
             # Required to use maths functions instead of numpy
         # TODO Move all non-GUI functions to separate threads
