@@ -25,7 +25,6 @@ class Andor:
         self.acquisitionmode = None
         self.randomtracks = None
         self.imagearray = None
-        self.imagearray16 = None
 
     def __del__(self):
         error = self.dll.ShutDown()
@@ -422,8 +421,7 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
             return 'Andor: GetAcquiredData error. No acquisition has taken place.'
 
-        self.imagearray = cimage[:]
-        self.imagearray = np.asarray(self.imagearray, dtype=np.uint32)
+        self.imagearray = np.asarray(cimage[:])
 
     def GetAcquiredData16(self):
         """
