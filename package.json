@@ -16,9 +16,4 @@
     "url": "https://github.com/priyankshah7/ScanCARS/issues"
   },
   "homepage": "https://github.com/priyankshah7/ScanCARS#readme",
-  "dependencies": {
-    "numpy": "numpy/numpy",
-    "pyqtgraph": "0.10.0",
-    "pyqt5": "5.9.1"
-  }
 }
