@@ -421,9 +421,7 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
             return 'Andor: GetAcquiredData error. No acquisition has taken place.'
 
-        # self.imagearray = np.asarray(cimage[:])
-
-        return np.asarray(cimage[:])
+        self.imagearray = np.asarray(cimage[:])
 
     def GetAcquiredData16(self):
         """

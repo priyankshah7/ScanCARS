@@ -2,7 +2,7 @@
 # Software to control the SIPCARS experimental setup
 # Priyank Shah - King's College London
 
-import sys
+import sys, time
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
