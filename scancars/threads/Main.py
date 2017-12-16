@@ -57,10 +57,12 @@ class StartAcq(QRunnable):
             self.gui.cam.SetExposureTime(self.exposurereq)
             self.gui.cam.StartAcquisition()
 
-            messageGetStatus = self.gui.cam.GetStatus()
-            while messageGetStatus != 'DRV_IDLE':
-                time.sleep(0.01)
-                messageGetStatus = self.gui.cam.GetStatus()
+            # messageGetStatus = self.gui.cam.GetStatus()
+            # while messageGetStatus != 'DRV_IDLE':
+            #     time.sleep(0.01)
+            #     messageGetStatus = self.gui.cam.GetStatus()
+
+            self.gui.cam.WaitForAcquisition()
 
             imagearray = self.gui.cam.GetAcquiredData()
 
