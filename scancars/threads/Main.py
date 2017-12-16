@@ -25,15 +25,11 @@ class StartAcq(QRunnable):
         else:
             self.gui.SpectralAcq_actual_time.setText(str("%.4f" % round(self.gui.cam.exposure, 4)))
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def stop(self):
         self.condition = False
         self.gui.post.status(self.gui, '')
         self.gui.Main_start_acq.setText('Start Acquisition')
-
-        messageGetStatus = self.gui.cam.GetStatus()
-        if messageGetStatus == 'DRV_ACQUIRING':
-            self.gui.cam.AbortAcquisition()
 
         self.gui.cam.AbortAcquisition()
 
@@ -77,6 +73,8 @@ class StartAcq(QRunnable):
             self.gui.Main_specwin.plot(self.track1, pen='r', name='track1')
             self.gui.Main_specwin.plot(self.track2, pen='g', name='track2')
             self.gui.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
+
+            self.gui.cam.FreeInternalMemory()
 
             # TODO When completing the above, add checks to see if spectracks/specwin is open
                 # isVis = self.winspectracks.isVisisble()
