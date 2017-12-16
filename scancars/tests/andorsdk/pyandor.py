@@ -421,7 +421,9 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_NO_NEW_DATA':
             return 'Andor: GetAcquiredData error. No acquisition has taken place.'
 
-        self.imagearray = np.asarray(cimage[:])
+        # self.imagearray = np.asarray(cimage[:])
+
+        return np.asarray(cimage[:])
 
     def GetAcquiredData16(self):
         """
@@ -1067,6 +1069,17 @@ class Andor:
 
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: GetPreAmpGain error. Invalid index.'
+
+    def FreeInternalMemory(self):
+        """
+        :return error message(string):
+
+        This function will deallocate any memory used internally to store the previously acquired
+        data. Note that once this function has been called, data from last acquisition cannot
+        be retrieved.
+        """
+        error = self.dll.FreeInternalMemory()
+
 
 
 ERROR_CODE = {

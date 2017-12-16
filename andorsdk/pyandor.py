@@ -1070,6 +1070,21 @@ class Andor:
         elif ERROR_CODE[error] == 'DRV_P1INVALID':
             return 'Andor: GetPreAmpGain error. Invalid index.'
 
+    def FreeInternalMemory(self):
+        """
+        :return error message(string):
+
+        This function will deallocate any memory used internally to store the previously acquired
+        data. Note that once this function has been called, data from last acquisition cannot
+        be retrieved.
+        """
+        error = self.dll.FreeInternalMemory()
+
+    def WaitForAcquisition(self):
+
+        error = self.dll.WaitForAcquisition()
+
+
 
 ERROR_CODE = {
     20001: "DRV_ERROR_CODES",
