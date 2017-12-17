@@ -37,6 +37,11 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.trackdiff = None
         self.tracksum = None
 
+        stylefile = QtCore.QFile('./forms/styletemp.qss')
+        stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+        self.setStyleSheet(str(stylefile.readAll()))
+        stylefile.close()
+
         # Creating variables to store instances of the camera and track/sum dialogs
         self.wincamera = None
         self.winspectracks = None
