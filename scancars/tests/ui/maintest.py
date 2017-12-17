@@ -8,6 +8,8 @@ import sys, time
 import numpy as np
 from ctypes import *
 
+dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
+
 # TODO Consider replacing the classes style below with just def methods (and assigning pyqtSlot where needed
 
 
@@ -63,7 +65,7 @@ class AcquireSignals(QtCore.QObject):
 class Acquire(QtCore.QRunnable):
     def __init__(self):
         super(Acquire, self).__init__()
-        self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
+        # self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
         self.condition = False
         self.signals = AcquireSignals()
 
@@ -79,8 +81,10 @@ class Acquire(QtCore.QRunnable):
 
     @QtCore.pyqtSlot()
     def run(self):
-        self.dll.SetAcquisitionMode(1)
-        self.dll.SetShutter(1, 1, 0, 0)
+        dll.SetAcquisitionMode(1)
+        dll.SetShutter(1, 1, 0, 0)
+
+        # FIXME Not currently working...
 
         self.condition = True
         # while self.condition:
