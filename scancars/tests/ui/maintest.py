@@ -1,14 +1,12 @@
+import sys, time
+import numpy as np
+from ctypes import *
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from scancars.tests.ui import testui
-from andorsdk.pyandor import Andor
-
-import sys, time
-import numpy as np
-from ctypes import *
-
-dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
+from scancars.sdk import andor
+from scancars.threads import uithread
 
 # TODO Consider replacing the classes style below with just def methods (and assigning pyqtSlot where needed
 
@@ -17,16 +15,15 @@ class TestUI(QMainWindow, testui.Ui_MainWindow):
     def __init__(self, parent=None):
         super(TestUI, self).__init__(parent)
         self.setupUi(self)
-        self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
 
-        self.width = None
+        # self.width = None
 
-        self.threadpool = QtCore.QThreadPool()
-        self.initialize()
-        self.acquire = Acquire()
+        # self.threadpool = QtCore.QThreadPool()
+        # self.initialize()
+        # self.acquire = Acquire()
 
         # Connecting Start button to function
-        self.startacq.clicked.connect(lambda: self.startplot())
+        # self.startacq.clicked.connect(lambda: self.startplot())
 
     def initialize(self):
         self.dll.Initialize()
@@ -56,59 +53,6 @@ class TestUI(QMainWindow, testui.Ui_MainWindow):
         elif self.acquire.condition is True:
             self.acquire.stop()
             print('stopping acq...')
-
-
-class AcquireSignals(QtCore.QObject):
-    finished = QtCore.pyqtSignal()
-
-
-class Acquire(QtCore.QRunnable):
-    def __init__(self):
-        super(Acquire, self).__init__()
-        # self.dll = cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
-        self.condition = False
-        self.signals = AcquireSignals()
-
-        imagearray = c_int * 1024
-        self.cimage = imagearray()
-
-        # self.gui = TestUI()
-
-    @QtCore.pyqtSlot()
-    def stop(self):
-        self.condition = False
-        self.signals.finished.emit()
-
-    @QtCore.pyqtSlot()
-    def run(self):
-        dll.SetAcquisitionMode(1)
-        dll.SetShutter(1, 1, 0, 0)
-
-        # FIXME Not currently working...
-
-        self.condition = True
-        # while self.condition:
-        #     self.dll.SetExposureTime(0.1)
-        #     self.dll.StartAcquisition()
-        #
-        #     self.dll.WaitForAcquisition()
-        #
-        #     self.dll.GetAcquiredData(pointer(self.cimage), 1024)
-        #
-        #     image = np.asarray(self.cimage[:])
-        #
-        #     track1 = image[0:511]
-        #     track2 = image[512:1023]
-        #     trackdiff = track2 - track1
-        #
-        #     self.gui.specwin.clear()
-        #     self.gui.specwin.plot(track1, pen='r', name='track1')
-        #     self.gui.specwin.plot(track2, pen='r', name='track2')
-        #     self.gui.specwin.plot(trackdiff, pen='r', name='trackdiff')
-        #
-        #     self.dll.FreeInternalMemory()
-
-        self.signals.finished.emit()
 
 
 def main():

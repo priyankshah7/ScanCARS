@@ -1,20 +1,24 @@
 import numpy as np
-from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal, QObject
+import time, ctypes, h5py
+from PyQt5 import QtCore
 
 from scancars.utils import toggle
+from andorsdk.pyandor import ERROR_CODE
+
+andordll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
 
 
-class AndorSignals(QObject):
-    finished = pyqtSignal()
+class AndorSignals(QtCore.QObject):
+    finished = QtCore.pyqtSignal()
 
 
-class Andor(QRunnable):
+class Andor(QtCore.QRunnable):
     def __init__(self, gui):
         super(Andor, self).__init__()
         self.gui = gui
         self.signals = AndorSignals()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def run(self):
         toggle.deactivate_buttons(self.gui)
 

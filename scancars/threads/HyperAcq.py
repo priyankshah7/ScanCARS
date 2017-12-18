@@ -1,4 +1,7 @@
+import time, ctypes
 from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal, QObject
+
+andordll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
 
 
 class StartSignals(QObject):

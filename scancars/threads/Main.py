@@ -1,6 +1,8 @@
+import time, ctypes
 from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal, QObject
+from PyQt5 import QtCore
 
-import time
+andordll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
 
 
 class StartAcq(QRunnable):
@@ -25,27 +27,31 @@ class StartAcq(QRunnable):
         else:
             self.gui.SpectralAcq_actual_time.setText(str("%.4f" % round(self.gui.cam.exposure, 4)))
 
-    # @pyqtSlot()
+    @pyqtSlot()
     def stop(self):
         self.condition = False
         self.gui.post.status(self.gui, '')
         self.gui.Main_start_acq.setText('Start Acquisition')
 
-        self.gui.cam.AbortAcquisition()
+        # self.gui.cam.AbortAcquisition()
+        andordll.AbortAcquisition()
+        andordll.SetShutter(1, 2, 0, 0)
 
         # TODO add code to stop acquisition as well
 
     @pyqtSlot()
     def run(self):
-        messageSetAcquisitionMode = self.gui.cam.SetAcquisitionMode(1)
-        if messageSetAcquisitionMode is not None:
-            self.gui.post.eventlog(self.gui, messageSetAcquisitionMode)
-            return
+        # messageSetAcquisitionMode = self.gui.cam.SetAcquisitionMode(1)
+        # if messageSetAcquisitionMode is not None:
+        #     self.gui.post.eventlog(self.gui, messageSetAcquisitionMode)
+        #     return
+        andordll.SetAcquisitionMode(1)
 
-        messageSetShutter = self.gui.cam.SetShutter(1, 1, 0, 0)
-        if messageSetShutter is not None:
-            self.gui.post.eventlog(self.gui, messageSetShutter)
-            return
+        # messageSetShutter = self.gui.cam.SetShutter(1, 1, 0, 0)
+        # if messageSetShutter is not None:
+        #     self.gui.post.eventlog(self.gui, messageSetShutter)
+        #     return
+        andordll.SetShutter(1, 1, 0, 0)
 
         self.gui.post.status(self.gui, 'Acquiring...')
         self.gui.Main_start_acq.setText('Stop Acquisition')
@@ -54,29 +60,31 @@ class StartAcq(QRunnable):
 
         self.condition = True
         while self.condition:
-            self.gui.cam.SetExposureTime(self.exposurereq)
-            self.gui.cam.StartAcquisition()
+            # self.gui.cam.SetExposureTime(self.exposurereq)
+            # self.gui.cam.StartAcquisition()
+            andordll.SetExposureTime(ctypes.c_float(self.exposurereq))
+            # andordll.StartAcquisition()
+            #
+            # # self.gui.cam.WaitForAcquisition()
+            # andordll.WaitForAcquisition()
+            #
+            # imagearray = self.gui.cam.GetAcquiredData()
+            #
+            # self.track1 = imagearray[0:self.width-1]
+            # self.track2 = imagearray[self.width:(2*self.width)-1]
+            # self.trackdiff = self.track2 - self.track1
+            # self.tracksum = self.track1 + self.track2
+            #
+            # self.gui.Main_specwin.clear()
+            # self.gui.Main_specwin.plot(self.track1, pen='r', name='track1')
+            # self.gui.Main_specwin.plot(self.track2, pen='g', name='track2')
+            # self.gui.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
 
-            # messageGetStatus = self.gui.cam.GetStatus()
-            # while messageGetStatus != 'DRV_IDLE':
-            #     time.sleep(0.01)
-            #     messageGetStatus = self.gui.cam.GetStatus()
+        #     # self.gui.cam.FreeInternalMemory()
+        #     andordll.FreeInternalMemory()
+        #     QtCore.QCoreApplication.processEvents()
 
-            self.gui.cam.WaitForAcquisition()
-
-            imagearray = self.gui.cam.GetAcquiredData()
-
-            self.track1 = imagearray[0:self.width-1]
-            self.track2 = imagearray[self.width:(2*self.width)-1]
-            self.trackdiff = self.track2 - self.track1
-            self.tracksum = self.track1 + self.track2
-
-            self.gui.Main_specwin.clear()
-            self.gui.Main_specwin.plot(self.track1, pen='r', name='track1')
-            self.gui.Main_specwin.plot(self.track2, pen='g', name='track2')
-            self.gui.Main_specwin.plot(self.trackdiff, pen='w', name='trackdiff')
-
-            self.gui.cam.FreeInternalMemory()
+        self.gui.post.eventlog(self.gui, 'stopped.')
 
             # TODO When completing the above, add checks to see if spectracks/specwin is open
                 # isVis = self.winspectracks.isVisisble()

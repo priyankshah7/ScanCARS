@@ -2,21 +2,25 @@
 # Software to control the SIPCARS experimental setup
 # Priyank Shah - King's College London
 
-import sys, time
+import sys, time, ctypes
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from scancars.forms import WindowMAIN, gui_camera, gui_specsum, gui_spectracks
-from scancars.utils import post, toggle, graphing
+from scancars.utils import post, graphing
+from scancars.utils import toggle
 from scancars.threads import Initialize, Main, CameraTemp, CameraOptions, SpectralAcq, HyperAcq
 
 from andorsdk.pyandor import Andor
+from andorsdk.pyandor import ERROR_CODE
 
+andordll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
+
+# toggle = Toggle()
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def __init__(self, parent=None):
         super(ScanCARS, self).__init__(parent)
-        self.setupUi(self)
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO If speed becomes an issue, consider using numba package with jit decorator
@@ -37,16 +41,19 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.trackdiff = None
         self.tracksum = None
 
-        stylefile = QtCore.QFile('./forms/styletemp.qss')
-        stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
-        self.setStyleSheet(str(stylefile.readAll()))
-        stylefile.close()
+        # # Importing css style file (qss varient)
+        # stylefile = QtCore.QFile('./forms/styletemp.css')
+        # stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+        # self.setStyleSheet(str(stylefile.readAll()))
+        # stylefile.close()
 
         # Creating variables to store instances of the camera and track/sum dialogs
         self.wincamera = None
         self.winspectracks = None
         self.winspecsum = None
 
+        # toggle.Toggle.deactivate_buttons(toggle.Toggle())
+        self.setupUi(self)
         # Main: connecting buttons to functions
         self.Main_start_acq.clicked.connect(lambda: self.main_startacq())
         self.Main_shutdown.clicked.connect(lambda: self.main_shutdown())
@@ -81,18 +88,26 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # Initializing the camera
         self.cam = Andor()
         self.initialize_andor()
+
+
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
         post.eventlog(self, 'An error has occurred. This program will exit after the Andor camera has shut down.')
 
-        messageCoolerOFF = self.cam.CoolerOFF()
-        if messageCoolerOFF is not None:
-            post.eventlog(self, messageCoolerOFF)
+        # messageCoolerOFF = self.cam.CoolerOFF()
+        # if messageCoolerOFF is not None:
+        #     post.eventlog(self, messageCoolerOFF)
+        #
+        # messageShutDown = self.cam.ShutDown()
+        # if messageShutDown is not None:
+        #     post.eventlog(self, messageShutDown)
 
-        messageShutDown = self.cam.ShutDown()
-        if messageShutDown is not None:
-            post.eventlog(self, messageShutDown)
+        errorCoolerOFF = andordll.CoolerOFF()
+        if ERROR_CODE[errorCoolerOFF] != 'DRV_SUCCESS':
+            post.eventlog(self, 'Andor: CoolerOFF error.')
+
+        andordll.ShutDown()
 
     # Initialize: defining functions
     def initialize_andor(self):
@@ -111,11 +126,13 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             startacq = Main.StartAcq(self)
             self.threadpool.start(startacq)
             self.acquiring = True
+            post.eventlog(self, 'acq is true')
 
         elif self.acquiring is True:
             startacq = Main.StartAcq(self)
             startacq.stop()
             self.acquiring = False
+            post.eventlog(self, 'acq is false')
 
     def main_shutdown(self):
         messageIsCoolerOn = self.cam.IsCoolerOn()
