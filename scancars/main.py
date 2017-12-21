@@ -8,19 +8,17 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from scancars.forms import WindowMAIN, gui_camera, gui_specsum, gui_spectracks
 from scancars.utils import post, graphing
-from scancars.utils import toggle
-from scancars.threads import Initialize, Main, CameraTemp, CameraOptions, SpectralAcq, HyperAcq
+from scancars.threads import Initialize, Main, tempthread, CameraOptions, SpectralAcq, HyperAcq
+from scancars.threads import uithread, tempthread, specthread
 
 from andorsdk.pyandor import Andor
 from andorsdk.pyandor import ERROR_CODE
 
-andordll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
-
-# toggle = Toggle()
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def __init__(self, parent=None):
         super(ScanCARS, self).__init__(parent)
+        self.setupUi(self)
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO If speed becomes an issue, consider using numba package with jit decorator
@@ -41,6 +39,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.trackdiff = None
         self.tracksum = None
 
+        self.width = None
+
         # # Importing css style file (qss varient)
         # stylefile = QtCore.QFile('./forms/styletemp.css')
         # stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
@@ -53,7 +53,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.winspecsum = None
 
         # toggle.Toggle.deactivate_buttons(toggle.Toggle())
-        self.setupUi(self)
+
         # Main: connecting buttons to functions
         self.Main_start_acq.clicked.connect(lambda: self.main_startacq())
         self.Main_shutdown.clicked.connect(lambda: self.main_shutdown())
@@ -86,44 +86,31 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         post.event_date(self)
 
         # Initializing the camera
-        self.cam = Andor()
+        # self.cam = Andor()
         self.initialize_andor()
-
 
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
         post.eventlog(self, 'An error has occurred. This program will exit after the Andor camera has shut down.')
 
-        # messageCoolerOFF = self.cam.CoolerOFF()
-        # if messageCoolerOFF is not None:
-        #     post.eventlog(self, messageCoolerOFF)
-        #
-        # messageShutDown = self.cam.ShutDown()
-        # if messageShutDown is not None:
-        #     post.eventlog(self, messageShutDown)
-
-        errorCoolerOFF = andordll.CoolerOFF()
-        if ERROR_CODE[errorCoolerOFF] != 'DRV_SUCCESS':
-            post.eventlog(self, 'Andor: CoolerOFF error.')
-
-        andordll.ShutDown()
+        shutdown = uithread.Shutdown(self)
 
     # Initialize: defining functions
     def initialize_andor(self):
-        initialize = Initialize.Andor(self)
+        initialize = uithread.Initialize(self)
         self.threadpool.start(initialize)
-        initialize.signals.finished.connect(lambda: initialize_gettemp())
+        initialize.signals.finished.connect(lambda: self.initialize_gettemp())
 
-        def initialize_gettemp():
-            post.eventlog(self, 'Andor: Successfully initialized.')
-            gettemperature = CameraTemp.AndorTemperature(self)
-            self.threadpool.start(gettemperature)
+    def initialize_gettemp(self):
+        post.eventlog(self, 'Andor: Successfully initialized.')
+        gettemperature = tempthread.AndorTemperature(self)
+        self.threadpool.start(gettemperature)
 
     # Main: defining functions
     def main_startacq(self):
         if self.acquiring is False:
-            startacq = Main.StartAcq(self)
+            startacq = specthread.Acquire(self)
             self.threadpool.start(startacq)
             self.acquiring = True
             post.eventlog(self, 'acq is true')
@@ -135,34 +122,9 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
             post.eventlog(self, 'acq is false')
 
     def main_shutdown(self):
-        messageIsCoolerOn = self.cam.IsCoolerOn()
-        if messageIsCoolerOn is not None:
-            post.eventlog(self, messageIsCoolerOn)
-
-        else:
-            if self.cam.coolerstatus == 0:
-                messageShutDown = self.cam.ShutDown()
-                if messageShutDown is not None:
-                    post.eventlog(self, messageShutDown)
-
-                post.eventlog(self, 'ScanCARS can now be safely closed.')
-
-            elif self.cam.coolerstatus == 1:
-                cooleroff = CameraTemp.CoolerOff(self)
-                self.threadpool.start(cooleroff)
-                cooleroff.signals.finished.connect(
-                    lambda: self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}"))
-                post.eventlog(self, '...waiting for the camera to heat up to -20C')
-
-                while self.cam.temperature < -20:
-                    pass
-
-                else:
-                    messageShutDown = self.cam.ShutDown()
-                    if messageShutDown is not None:
-                        post.eventlog(self, messageShutDown)
-
-                post.eventlog(self, 'ScanCARS can now be safely closed.')
+        shutdown = uithread.Shutdown(self)
+        self.threadpool.start(shutdown)
+        shutdown.signals.finished.connect(lambda: post.eventlog(self, 'ScanCARS can now be safely closed.'))
 
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
@@ -172,13 +134,13 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         else:
             if self.cam.coolerstatus == 0:
-                cooleron = CameraTemp.CoolerOn(self)
+                cooleron = tempthread.CoolerOn(self)
                 self.threadpool.start(cooleron)
                 cooleron.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler on.'))
                 self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #323e30}")
 
             elif self.cam.coolerstatus == 1:
-                cooleroff = CameraTemp.CoolerOff(self)
+                cooleroff = tempthread.CoolerOff(self)
                 self.threadpool.start(cooleroff)
                 cooleroff.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler switched off.'))
                 self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
