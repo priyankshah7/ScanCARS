@@ -41,11 +41,11 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         self.width = None
 
-        # # Importing css style file (qss varient)
-        # stylefile = QtCore.QFile('./forms/styletemp.css')
-        # stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
-        # self.setStyleSheet(str(stylefile.readAll()))
-        # stylefile.close()
+        # Importing css style file
+        stylefile = QtCore.QFile('./forms/styletemp.css')
+        stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+        self.setStyleSheet(str(stylefile.readAll(), 'utf-8'))
+        stylefile.close()
 
         # Creating variables to store instances of the camera and track/sum dialogs
         self.wincamera = None
@@ -87,7 +87,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         # Initializing the camera
         # self.cam = Andor()
-        self.initialize_andor()
+        # self.initialize_andor()
 
         # ------------------------------------------------------------------------------------------------------------
 
