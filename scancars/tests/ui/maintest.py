@@ -5,10 +5,11 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from scancars.tests.ui import testui
-from scancars.sdk import andor
+from scancars.sdk.andor import Cam
 from scancars.threads import uithread
 
 # TODO Consider replacing the classes style below with just def methods (and assigning pyqtSlot where needed
+andor = Cam()
 
 
 class TestUI(QMainWindow, testui.Ui_MainWindow):
@@ -16,43 +17,93 @@ class TestUI(QMainWindow, testui.Ui_MainWindow):
         super(TestUI, self).__init__(parent)
         self.setupUi(self)
 
-        # self.width = None
+        self.acquiring = False
 
-        # self.threadpool = QtCore.QThreadPool()
-        # self.initialize()
-        # self.acquire = Acquire()
+        self.threadpool = QtCore.QThreadPool()
+        self.initialize()
 
         # Connecting Start button to function
-        # self.startacq.clicked.connect(lambda: self.startplot())
+        self.startacq.clicked.connect(lambda: self.startplot())
 
     def initialize(self):
-        self.dll.Initialize()
-        self.dll.SetShutter(1, 2, 0, 0)
-        self.dll.SetReadMode(2)
+        initialize = Initialize()
+        self.threadpool.start(initialize)
 
-        trackposition = np.array([154, 187, 211, 244])
-
-        self.dll.SetRandomTracks(2, trackposition.ctypes.data_as(POINTER(c_long)))
-        self.dll.SetADChannel(1)
-        self.dll.SetTriggerMode(0)
-
-        cw = c_int()
-        ch = c_int()
-
-        self.dll.GetDetector(byref(cw), byref(ch))
-        self.width = cw.value
-
-        self.dll.SetHSSpeed(1, 0)
-        self.dll.SetVSSpeed(3)
+        self.specwin.enableAutoRange(x=False, y=True)
+        self.specwin.setXRange(0, 512, padding=0)
 
     def startplot(self):
-        if self.acquire.condition is False:
-            self.threadpool.start(self.acquire)
-            print('starting acq...')
+        startacq = Start(self)
+        if self.acquiring is False:
+            self.threadpool.start(startacq)
+            self.acquiring = True
 
-        elif self.acquire.condition is True:
-            self.acquire.stop()
-            print('stopping acq...')
+        elif self.acquiring is True:
+            startacq.stop()
+            self.acquiring = False
+
+
+class Initialize(QtCore.QRunnable):
+    def __init__(self):
+        super(Initialize, self).__init__()
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        randtrack = np.array([153, 186, 211, 244])
+
+        errorinitialize = andor.initialize()
+        if errorinitialize != 'DRV_SUCCESS':
+            print('Andor: Initialize error. ' + errorinitialize)
+        andor.getdetector()
+        andor.setshutter(1, 2, 0, 0)
+        andor.setreadmode(2)
+        andor.setrandomtracks(2, randtrack)
+        andor.setadchannel(1)
+        andor.settriggermode(0)
+        andor.sethsspeed(1, 0)
+        andor.setvsspeed(4)
+
+        andor.dim = andor.width * andor.randomtracks
+
+        print('finished initialization')
+
+
+class Start(QtCore.QRunnable):
+    def __init__(self, ui):
+        super(Start, self).__init__()
+        self.ui = ui
+        self.condition = False
+        self.width = andor.width
+
+    def stop(self):
+        self.condition = False
+        andor.abortacquisition()
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        andor.setacquisitionmode(1)
+        andor.setshutter(1, 1, 0, 0)
+        andor.setexposuretime(0.2)
+
+        self.condition = True
+        while self.condition:
+            andor.startacquisition()
+            andor.waitforacquisition()
+            andor.getacquireddata()
+
+            # track1 = andor.imagearray[0:self.width - 1]
+            # track2 = andor.imagearray[self.width:(2 * self.width) - 1]
+            # trackdiff = track2 - track1
+
+            self.ui.specwin.clear()
+            self.ui.specwin.plot(andor.imagearray[0:self.width - 1],
+                                 pen='r', name='track1')
+            self.ui.specwin.plot(andor.imagearray[self.width:(2 * self.width) - 1],
+                                 pen='g', name='track2')
+            self.ui.specwin.plot(andor.imagearray[self.width:(2 * self.width) - 1] - andor.imagearray[0:self.width - 1],
+                                 pen='w', name='trackdiff')
+
+            andor.freeinternalmemory()
 
 
 def main():
