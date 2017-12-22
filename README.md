@@ -1,5 +1,4 @@
 # ScanCARS
-[![NSP Status](https://nodesecurity.io/orgs/cars/projects/1189321f-476c-4347-b365-3a6e6f8acc86/badge)](https://nodesecurity.io/orgs/cars/projects/1189321f-476c-4347-b365-3a6e6f8acc86)
 
 *Author: Priyank Shah* <br />
 *Author email: priyank.shah@kcl.ac.uk* <br />
