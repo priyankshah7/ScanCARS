@@ -19,6 +19,13 @@ class TestUI(QMainWindow, testui.Ui_MainWindow):
 
         self.acquiring = False
 
+        # Importing css style file
+        stylefile = QtCore.QFile('./styletemp.css')
+        stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+        stylefile.open(QtCore.QFile.ReadOnly)
+        self.setStyleSheet(str(stylefile.readAll(), 'utf-8'))
+        stylefile.close()
+
         self.threadpool = QtCore.QThreadPool()
         self.initialize()
 
@@ -85,23 +92,31 @@ class Start(QtCore.QRunnable):
         andor.setshutter(1, 1, 0, 0)
         andor.setexposuretime(0.2)
 
+        track1plot = self.ui.specwin.plot()
+        track2plot = self.ui.specwin.plot()
+        trackdplot = self.ui.specwin.plot()
+
         self.condition = True
         while self.condition:
+            andor.setexposuretime(0.2)
             andor.startacquisition()
             andor.waitforacquisition()
             andor.getacquireddata()
 
-            # track1 = andor.imagearray[0:self.width - 1]
-            # track2 = andor.imagearray[self.width:(2 * self.width) - 1]
-            # trackdiff = track2 - track1
+            imagearray = andor.imagearray
 
-            self.ui.specwin.clear()
-            self.ui.specwin.plot(andor.imagearray[0:self.width - 1],
-                                 pen='r', name='track1')
-            self.ui.specwin.plot(andor.imagearray[self.width:(2 * self.width) - 1],
-                                 pen='g', name='track2')
-            self.ui.specwin.plot(andor.imagearray[self.width:(2 * self.width) - 1] - andor.imagearray[0:self.width - 1],
-                                 pen='w', name='trackdiff')
+            # self.ui.specwin.clear()
+            # self.ui.specwin.plot(imagearray[0:self.width - 1],
+            #                      pen='r', name='track1')
+            # self.ui.specwin.plot(imagearray[self.width:(2 * self.width) - 1],
+            #                      pen='g', name='track2')
+            # self.ui.specwin.plot(imagearray[self.width:(2 * self.width) - 1] - imagearray[0:self.width - 1],
+            #                      pen='w', name='trackdiff')
+
+            track1plot.setData(imagearray[0:self.width - 1], pen='r', name='track1')
+            track2plot.setData(imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
+            trackdplot.setData(imagearray[self.width:(2 * self.width) - 1] - imagearray[0:self.width - 1],
+                               pen='w', name='trackdiff')
 
             andor.freeinternalmemory()
 
