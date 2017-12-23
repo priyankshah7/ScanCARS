@@ -26,27 +26,35 @@ class TestUI(QMainWindow, testui.Ui_MainWindow):
         self.setStyleSheet(str(stylefile.readAll(), 'utf-8'))
         stylefile.close()
 
-        self.threadpool = QtCore.QThreadPool()
-        self.initialize()
+        # Plot window settings
+        self.specwin.enableAutoRange(x=False, y=True)
+        self.specwin.setXRange(0, 512, padding=0)
+        self.specwin.plotItem.addLegend()
+
+        # Importing threads
+        self.initializethread = Initialize()
+        # self.startacqthread = Start(self)
+
+        # TODO For sake of pyqtgraph plotting, need to move class initializations here.
+        # TODO DO NOT DO THIS. Breaks plotting for some reason.
 
         # Connecting Start button to function
         self.startacq.clicked.connect(lambda: self.startplot())
 
-    def initialize(self):
-        initialize = Initialize()
-        self.threadpool.start(initialize)
+        self.threadpool = QtCore.QThreadPool()
+        self.initialize()
 
-        self.specwin.enableAutoRange(x=False, y=True)
-        self.specwin.setXRange(0, 512, padding=0)
+    def initialize(self):
+        self.threadpool.start(self.initializethread)
 
     def startplot(self):
-        startacq = Start(self)
+        startacqthread = Start(self)
         if self.acquiring is False:
-            self.threadpool.start(startacq)
+            self.threadpool.start(startacqthread)
             self.acquiring = True
 
         elif self.acquiring is True:
-            startacq.stop()
+            startacqthread.stop()
             self.acquiring = False
 
 
@@ -92,6 +100,7 @@ class Start(QtCore.QRunnable):
         andor.setshutter(1, 1, 0, 0)
         andor.setexposuretime(0.2)
 
+        self.ui.specwin.clear()
         track1plot = self.ui.specwin.plot()
         track2plot = self.ui.specwin.plot()
         trackdplot = self.ui.specwin.plot()
@@ -104,14 +113,6 @@ class Start(QtCore.QRunnable):
             andor.getacquireddata()
 
             imagearray = andor.imagearray
-
-            # self.ui.specwin.clear()
-            # self.ui.specwin.plot(imagearray[0:self.width - 1],
-            #                      pen='r', name='track1')
-            # self.ui.specwin.plot(imagearray[self.width:(2 * self.width) - 1],
-            #                      pen='g', name='track2')
-            # self.ui.specwin.plot(imagearray[self.width:(2 * self.width) - 1] - imagearray[0:self.width - 1],
-            #                      pen='w', name='trackdiff')
 
             track1plot.setData(imagearray[0:self.width - 1], pen='r', name='track1')
             track2plot.setData(imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
