@@ -41,6 +41,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
         self.width = None
 
+        self.Main_specwin.plotItem.addLegend()
+
         # Importing css style file
         stylefile = QtCore.QFile('./forms/styletemp.css')
         stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
@@ -51,8 +53,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.wincamera = None
         self.winspectracks = None
         self.winspecsum = None
-
-        # toggle.Toggle.deactivate_buttons(toggle.Toggle())
 
         # Main: connecting buttons to functions
         self.Main_start_acq.clicked.connect(lambda: self.main_startacq())
@@ -86,8 +86,8 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         post.event_date(self)
 
         # Initializing the camera
-        # self.cam = Andor()
-        # self.initialize_andor()
+        self.cam = Andor()
+        self.initialize_andor()
 
         # ------------------------------------------------------------------------------------------------------------
 
@@ -109,14 +109,13 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # Main: defining functions
     def main_startacq(self):
+        startacq = specthread.Acquire(self)
         if self.acquiring is False:
-            startacq = specthread.Acquire(self)
             self.threadpool.start(startacq)
             self.acquiring = True
             post.eventlog(self, 'acq is true')
 
         elif self.acquiring is True:
-            startacq = Main.StartAcq(self)
             startacq.stop()
             self.acquiring = False
             post.eventlog(self, 'acq is false')
