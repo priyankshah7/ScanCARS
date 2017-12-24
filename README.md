@@ -5,27 +5,36 @@
 *Institution: King's College London* <br />
 *Description: Hyperspectral image acquisition software*
 
+### Description
 This interactive GUI-based software is built to acquire hyperspectral
 data in a microscope-based experimental setup. It's original 
-development is to acquire spectral interferometric polarized coherent 
+purpose is to acquire spectral interferometric polarized coherent 
 anti-Stokes Raman spectroscopy (SIPCARS) hyperspectral data.
 
+Hyperspectral acquisition using ScanCARS requires an Andor scientific camera
+and an open-loop configured microscope stage controlled using a NI DAQ card 
+(though an ADwin software development kit is also provided). ScanCARS is
+currently only configured to work on Windows, however it can easily be modified
+to work on Linux/Mac OS if the relevant Andor driver has been purchased.
+
 ### Requirements
-The two software development kits (SDKs) included are the Andor SDK and 
-the ADwin SDK. The Andor SDK controls Andor's range of CCD cameras and its
-use is dependent on the installation of the drivers provided by Andor. The Andor
-SDK is modified from [here](https://github.com/hamidohadi/pyandor). The
-ADwin SDK is used to drive the microscope stage and its use is also
-dependent on the installation of the drivers provided by ADwin.
+ScanCARS is Qt based and written in python. An API to the Andor software development
+kit written in python is provided (scancars/sdk/andor) and, for reference, it 
+has been modified from [here](https://github.com/hamidohadi/pyandor). The openly
+available PyDAQmx package developed by NI is not provided but can be acquired 
+from [here](https://github.com/ni/nidaqmx-python). 
 
 The following python packages are also required:
 + numpy
 + pyqtgraph
-+ pyqt5
++ PyQt5
 + h5py
++ PyDAQmx
 
-### Data file type
-+ Single-point spectroscopic data: .txt file
-+ Hyperspectral data: .txt file
+### Data output
+File are stored in the hierarchical data format (HDF5), a format used to store
+multidimensional data.  
++ Single-point spectroscopic data: .h5 file
++ Hyperspectral data: .h5 file
 
 
