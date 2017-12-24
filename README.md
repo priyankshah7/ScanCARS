@@ -22,6 +22,7 @@ The following python packages are also required:
 + numpy
 + pyqtgraph
 + pyqt5
++ h5py
 
 ### Data file type
 + Single-point spectroscopic data: .txt file
