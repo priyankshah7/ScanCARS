@@ -19,9 +19,9 @@ to work on Linux/Mac OS if the relevant Andor driver has been purchased.
 
 ### Requirements
 ScanCARS is Qt based and written in python. An API to the Andor software development
-kit written in python is provided (scancars/sdk/andor) and, for reference, it 
+kit written in python is provided *(scancars/sdk/andor)* and, for reference, it 
 has been modified from [here](https://github.com/hamidohadi/pyandor). The openly
-available PyDAQmx package developed by NI is not provided but can be acquired 
+available **nidaqmx** package developed by NI is not provided but can be acquired 
 from [here](https://github.com/ni/nidaqmx-python). 
 
 The following python packages are also required:
@@ -29,12 +29,12 @@ The following python packages are also required:
 + pyqtgraph
 + PyQt5
 + h5py
-+ PyDAQmx
++ nidaqmx
 
 ### Data output
 File are stored in the hierarchical data format (HDF5), a format used to store
 multidimensional data.  
-+ Single-point spectroscopic data: .h5 file
-+ Hyperspectral data: .h5 file
++ Single-point spectroscopic data: *.h5 file*
++ Hyperspectral data: *.h5 file*
 
 
