@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow
 
-from scancars.forms import WindowSPECTRACKS
+from gui.forms import WindowSPECTRACKS
 
 
 class SPECTRACKS(QMainWindow, WindowSPECTRACKS.Ui_Dialog):

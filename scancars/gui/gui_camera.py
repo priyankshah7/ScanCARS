@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow
 
-from scancars.forms import WindowCAMERA
+from gui.forms import WindowCAMERA
 
 
 class CAMERA(QMainWindow, WindowCAMERA.Ui_Dialog):
