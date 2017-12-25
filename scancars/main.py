@@ -2,17 +2,15 @@
 # Software to control the SIPCARS experimental setup
 # Priyank Shah - King's College London
 
-import sys, time, ctypes
+import sys
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
-from scancars.forms import WindowMAIN, gui_camera, gui_specsum, gui_spectracks
-from scancars.utils import post, graphing
-from scancars.threads import Initialize, Main, tempthread, CameraOptions, SpectralAcq, HyperAcq
+from scancars.gui.forms import WindowMAIN
+from scancars.gui import gui_camera, gui_specsum, gui_spectracks
+from scancars.gui.css.setstyle import main
 from scancars.threads import uithread, tempthread, specthread
-
-from andorsdk.pyandor import Andor
-from andorsdk.pyandor import ERROR_CODE
+from scancars.utils import post
 
 
 class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
@@ -23,7 +21,6 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO If speed becomes an issue, consider using numba package with jit decorator
             # Required to use maths functions instead of numpy
-        # TODO Move all non-GUI functions to separate threads
 
         # TODO Reconsidering separating main functions completely.......
 
@@ -39,15 +36,10 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.trackdiff = None
         self.tracksum = None
 
-        self.width = None
-
         self.Main_specwin.plotItem.addLegend()
 
-        # Importing css style file
-        stylefile = QtCore.QFile('./forms/styletemp.css')
-        stylefile.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
-        self.setStyleSheet(str(stylefile.readAll(), 'utf-8'))
-        stylefile.close()
+        # Setting the css-style file
+        main(self)
 
         # Creating variables to store instances of the camera and track/sum dialogs
         self.wincamera = None
@@ -86,15 +78,14 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         post.event_date(self)
 
         # Initializing the camera
-        self.cam = Andor()
+        # self.cam = Cam()
         self.initialize_andor()
 
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
         post.eventlog(self, 'An error has occurred. This program will exit after the Andor camera has shut down.')
-
-        shutdown = uithread.Shutdown(self)
+        uithread.Shutdown(self)
 
     # Initialize: defining functions
     def initialize_andor(self):
@@ -164,8 +155,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # CameraOptions: defining functions
     def cameraoptions_update(self):
-        update = CameraOptions.Update(self)
-        self.threadpool.start(update)
+        pass
 
     def cameraoptions_openimage(self):
         # openimage = CameraOptions.OpenImage(self)
@@ -174,24 +164,18 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.wincamera.setWindowTitle('Live CCD Video')
         self.wincamera.show()
 
-        openimage = CameraOptions.OpenImage(self)
-        self.threadpool.start(openimage)
+        pass
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
-        updatetime = SpectralAcq.UpdateTime(self)
-        self.threadpool.start(updatetime)
+        pass
 
     def spectralacq_start(self):
-        specstart = SpectralAcq.Start(self)
-        self.threadpool.start(specstart)
-        specstart.signals.finished.connect(lambda: None)
+        pass
 
     # HyperAcq: defining functions
     def hyperacq_start(self):
-        hypstart = HyperAcq.Start(self)
-        self.threadpool.start(hypstart)
-        hypstart.signals.finished.connect(lambda: None)
+        pass
 
 
 def main():
