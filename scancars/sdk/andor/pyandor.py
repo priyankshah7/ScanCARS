@@ -175,12 +175,11 @@ class Cam:
         # TODO Can only be used for spectra (not for CCD tracks unless updated)
         self.imagearray = None
 
-        cimageArray = ctypes.c_int * self.dim
-        cimage = cimageArray()
+        cimagearray = ctypes.c_int * self.dim
+        cimage = cimagearray()
 
-        # error = dll.GetAcquiredData16(ctypes.pointer(cimage), self.dim)
-        # self.imagearray = np.asarray(cimage[:], dtype=np.uint16)
         error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim)
+
         self.imagearray = np.asarray(cimage[:])
         return ERROR_CODE[error]
 
