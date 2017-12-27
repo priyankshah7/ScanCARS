@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'WindowSPECTRACKS.ui'
+# Form implementation generated from reading ui file 'spectracks.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.1
 #

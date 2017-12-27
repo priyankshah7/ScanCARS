@@ -2,18 +2,22 @@
 # Software to control the SIPCARS experimental setup
 # Priyank Shah - King's College London
 
-import sys
+import sys, ctypes
+import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
-from scancars.gui.forms import WindowMAIN
-from scancars.gui import gui_camera, gui_specsum, gui_spectracks
-from scancars.gui.css.setstyle import main
-from scancars.threads import uithread, tempthread, specthread
-from scancars.utils import post
+from scancars.gui import dialogs
+from scancars.gui.forms import main
+from scancars.gui.css import setstyle
+from scancars.threads import uithreads
+from scancars.utils import post, toggle, savetofile
+from scancars.sdk.andor.pyandor import Cam
+
+andor = Cam()
 
 
-class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
+class ScanCARS(QMainWindow, main.Ui_MainWindow):
     def __init__(self, parent=None):
         super(ScanCARS, self).__init__(parent)
         self.setupUi(self)
@@ -39,7 +43,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
         self.Main_specwin.plotItem.addLegend()
 
         # Setting the css-style file
-        main(self)
+        setstyle.main(self)
 
         # Creating variables to store instances of the camera and track/sum dialogs
         self.wincamera = None
@@ -85,36 +89,36 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     def __del__(self):
         post.eventlog(self, 'An error has occurred. This program will exit after the Andor camera has shut down.')
-        uithread.Shutdown(self)
+        andorthread = uithreads.AndorThread(self)
+        andorthread.shutdown()
 
     # Initialize: defining functions
     def initialize_andor(self):
-        initialize = uithread.Initialize(self)
+        initialize = uithreads.AndorThread(self)
         self.threadpool.start(initialize)
-        initialize.signals.finished.connect(lambda: self.initialize_gettemp())
+        initialize.signals.finishedInitialize.connect(lambda: self.gettemp())
 
-    def initialize_gettemp(self):
+    def gettemp(self):
         post.eventlog(self, 'Andor: Successfully initialized.')
-        gettemperature = tempthread.AndorTemperature(self)
+        gettemperature = uithreads.TemperatureThread(self)
         self.threadpool.start(gettemperature)
 
     # Main: defining functions
     def main_startacq(self):
-        startacq = specthread.Acquire(self)
+        startacq = uithreads.AcquireThread(self)
         if self.acquiring is False:
             self.threadpool.start(startacq)
             self.acquiring = True
-            post.eventlog(self, 'acq is true')
 
         elif self.acquiring is True:
             startacq.stop()
-            self.acquiring = False
-            post.eventlog(self, 'acq is false')
+            startacq.signals.finishedAcquireStop.connect(lambda: self.acquiring is False)
+            # TODO Test the above lambda
 
     def main_shutdown(self):
-        shutdown = uithread.Shutdown(self)
-        self.threadpool.start(shutdown)
-        shutdown.signals.finished.connect(lambda: post.eventlog(self, 'ScanCARS can now be safely closed.'))
+        andorthread = uithreads.AndorThread(self)
+        andorthread.shutdown()
+        andorthread.signals.finishedShutdown.connect(lambda: post.eventlog(self, 'ScanCARS can now be safely closed.'))
 
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
@@ -140,12 +144,12 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
 
     # SpectraWin: defining functions
     def spectrawin_tracks(self):
-        self.winspectracks = gui_spectracks.SPECTRACKS()
+        self.winspectracks = dialogs.SPECTRACKS()
         self.winspectracks.setWindowTitle('Individual Tracks Spectra')
         self.winspectracks.show()
 
     def spectrawin_sum(self):
-        self.winspecsum = gui_specsum.SPECSUM()
+        self.winspecsum = dialogs.SPECSUM()
         self.winspecsum.setWindowTitle('Sum Track Spectrum')
         self.winspecsum.show()
 
@@ -160,7 +164,7 @@ class ScanCARS(QMainWindow, WindowMAIN.Ui_MainWindow):
     def cameraoptions_openimage(self):
         # openimage = CameraOptions.OpenImage(self)
         # self.threadpool.start(openimage)
-        self.wincamera = gui_camera.CAMERA()
+        self.wincamera = dialogs.CAMERA()
         self.wincamera.setWindowTitle('Live CCD Video')
         self.wincamera.show()
 
