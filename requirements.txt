@@ -1,4 +1,0 @@
-numpy
-pyqtgraph
-PyQt5
-h5py
