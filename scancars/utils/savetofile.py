@@ -10,8 +10,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
 
         with h5py.File(path, 'w') as datafile:
             filegroup = datafile.create_group('sipcars')
-            filegroup.create_dataset('track1', data=track1)
-            filegroup.create_dataset('track2', data=track2)
+            filegroup.create_dataset('track1', data=track1, compression='gzip', compression_opts=9)
+            filegroup.create_dataset('track2', data=track2, compression='gzip', compression_opts=9)
 
             filegroup.attrs['Acquisition Type'] = 'Spectral'
             filegroup.attrs['Exposure Time'] = acqproperties.time
@@ -25,8 +25,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
 
         with h5py.File(path, 'w') as datafile:
             filegroup = datafile.create_group('sipcars')
-            filegroup.create_dataset('track1', data=track1)
-            filegroup.create_dataset('track2', data=track2)
+            filegroup.create_dataset('track1', data=track1, compression='gzip', compression_opts=9)
+            filegroup.create_dataset('track2', data=track2, compression='gzip', compression_opts=9)
 
             filegroup.attrs['Acquisition Type'] = 'Hyperspectral'
             filegroup.attrs['Exposure Time'] = acqproperties.time
