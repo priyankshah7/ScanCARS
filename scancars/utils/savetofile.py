@@ -1,6 +1,12 @@
 import h5py, time
 import numpy as np
 
+"""
+INTERNAL
+Note that saving to .h5 will increase the size of the file compared to the custom .cars binary file.
+The increase is roughly a factor of x3.6 even with compression (worthwhile sacrifice for now).
+"""
+
 
 def save(data, path, acqproperties, acqtype='spectral'):
     if acqtype == 'spectral':
@@ -10,8 +16,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
 
         with h5py.File(path, 'w') as datafile:
             filegroup = datafile.create_group('sipcars')
-            filegroup.create_dataset('track1', data=track1)
-            filegroup.create_dataset('track2', data=track2)
+            filegroup.create_dataset('track1', data=track1, compression='gzip', compression_opts=9)
+            filegroup.create_dataset('track2', data=track2, compression='gzip', compression_opts=9)
 
             filegroup.attrs['Acquisition Type'] = 'Spectral'
             filegroup.attrs['Exposure Time'] = acqproperties.time
@@ -25,8 +31,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
 
         with h5py.File(path, 'w') as datafile:
             filegroup = datafile.create_group('sipcars')
-            filegroup.create_dataset('track1', data=track1)
-            filegroup.create_dataset('track2', data=track2)
+            filegroup.create_dataset('track1', data=track1, compression='gzip', compression_opts=9)
+            filegroup.create_dataset('track2', data=track2, compression='gzip', compression_opts=9)
 
             filegroup.attrs['Acquisition Type'] = 'Hyperspectral'
             filegroup.attrs['Exposure Time'] = acqproperties.time
