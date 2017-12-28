@@ -1,6 +1,12 @@
 import h5py, time
 import numpy as np
 
+"""
+INTERNAL
+Note that saving to .h5 will increase the size of the file compared to the custom .cars binary file.
+The increase is roughly a factor of x3.6 even with compression (worthwhile sacrifice for now).
+"""
+
 
 def save(data, path, acqproperties, acqtype='spectral'):
     if acqtype == 'spectral':
