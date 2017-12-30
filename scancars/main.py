@@ -32,13 +32,18 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # Importing relevant methods and classes
         self.post = post
         self.threadpool = QtCore.QThreadPool()
+
         self.acquiring = False
+        self.gettingtemp = False
 
         # Creating variables for tracks (perhaps create function here instead)
         self.track1 = None
         self.track2 = None
         self.trackdiff = None
         self.tracksum = None
+
+        self.exposuretime = float(self.SpectralAcq_time_req.text())
+        self.width = andor.width
 
         self.Main_specwin.plotItem.addLegend()
 
@@ -94,52 +99,73 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # Initialize: defining functions
     def initialize_andor(self):
-        initialize = uithreads.AndorThread(self)
+        initialize = uithreads.InitializeThread(self)
         self.threadpool.start(initialize)
         initialize.signals.finishedInitialize.connect(lambda: self.gettemp())
 
     def gettemp(self):
         post.eventlog(self, 'Andor: Successfully initialized.')
+        self.gettingtemp = True
         gettemperature = uithreads.TemperatureThread(self)
         self.threadpool.start(gettemperature)
 
     # Main: defining functions
     def main_startacq(self):
+        # TODO Need to choose whether to use QThread or ORunnable
         startacq = uithreads.AcquireThread(self)
         if self.acquiring is False:
-            self.threadpool.start(startacq)
             self.acquiring = True
+            self.threadpool.start(startacq)
+        #
+        # elif self.acquiring is True:
+        #     startacq.stop()
+        #     startacq.signals.finishedAcquireStop.connect(lambda: self.acquiring is False)
+        #     # TODO Test the above lambda
+
+        # startacq = uithreads.AcquireTest(self)
+        # if self.acquiring is False:
+        #     self.acquiring = True
+        #     startacq.start()
 
         elif self.acquiring is True:
-            startacq.stop()
-            startacq.signals.finishedAcquireStop.connect(lambda: self.acquiring is False)
-            # TODO Test the above lambda
+            self.acquiring = False
+            toggle.activate_buttons(self)
+            post.status(self, '')
+            self.Main_start_acq.setText('Start Acquisition')
 
     def main_shutdown(self):
-        andorthread = uithreads.AndorThread(self)
-        andorthread.shutdown()
-        andorthread.signals.finishedShutdown.connect(lambda: post.eventlog(self, 'ScanCARS can now be safely closed.'))
+        shutdown = uithreads.ShutdownThread(self)
+        self.threadpool.start(shutdown)
+        shutdown.signals.finishedShutdown.connect(lambda: post.eventlog(self, 'ScanCARS can now be safely closed.'))
 
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
-        messageIsCoolerOn = self.cam.IsCoolerOn()
-        if messageIsCoolerOn is not None:
-            post.eventlog(self, messageIsCoolerOn)
+        # Checking to see if the cooler is on or off
+        messageIsCoolerOn = andor.iscooleron()
+        if messageIsCoolerOn != 'DRV_SUCCESS':
+            post.eventlog(self, 'Andor: IsCoolerOn error. ' + messageIsCoolerOn)
 
         else:
-            if self.cam.coolerstatus == 0:
-                cooleron = tempthread.CoolerOn(self)
-                self.threadpool.start(cooleron)
-                cooleron.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler on.'))
-                self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #323e30}")
+            if andor.coolerstatus == 0:
+                # Turning the cooler on and checking to see if it has been turned on
+                andor.cooleron()
+                andor.iscooleron()
+                if andor.coolerstatus == 1:
+                    post.eventlog(self, 'Andor: Cooler on.')
+                    self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #323e30}")
+                    self.CameraTemp_cooler_on.setText('Cooler Off')
 
-            elif self.cam.coolerstatus == 1:
-                cooleroff = tempthread.CoolerOff(self)
-                self.threadpool.start(cooleroff)
-                cooleroff.signals.finished.connect(lambda: post.eventlog(self, 'Andor: Cooler switched off.'))
-                self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
+            elif andor.coolerstatus == 1:
+                # Turning the cooler off and checking to see if it has been turned off
+                andor.cooleroff()
+                andor.iscooleron()
+                if andor.coolerstatus == 0:
+                    post.eventlog(self, 'Andor: Cooler off.')
+                    self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
+                    self.CameraTemp_cooler_on.setText('Cooler On')
 
             else:
+                # Shouldn't expect this to be called, if it is then it's unlikely to be related to the Andor
                 post.eventlog(self, 'An error has occured. Possibly related to the GUI itself?')
 
     # SpectraWin: defining functions
@@ -172,7 +198,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
-        pass
+        # Storing the acquisition time
+        self.exposuretime = float(self.SpectralAcq_time_req.text())
+        post.eventlog(self, 'Andor: Exposure time set to ' + self.exposuretime + 's')
 
     def spectralacq_start(self):
         pass
