@@ -1,6 +1,7 @@
 import time
 import numpy as np
 from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication
 
 from scancars.sdk.andor.pyandor import Cam
 from scancars.utils import toggle, post
@@ -15,26 +16,11 @@ class WorkerSignals(QtCore.QObject):
     finishedAcquireStop = QtCore.pyqtSignal()
 
 
-class AndorThread(QtCore.QRunnable):
+class InitializeThread(QtCore.QRunnable):
     def __init__(self, ui):
-        super(AndorThread, self).__init__()
+        super(InitializeThread, self).__init__()
         self.signals = WorkerSignals()
         self.ui = ui
-
-    @QtCore.pyqtSlot()
-    def shutdown(self):
-        andor.setshutter(1, 2, 0, 0)
-        andor.iscooleron()
-        if andor.coolerstatus == 0:
-            andor.shutdown()
-
-        elif andor.coolerstatus == 1:
-            andor.cooleroff()
-            while andor.temperature < -20:
-                time.sleep(1)
-            andor.shutdown()
-
-        self.signals.finishedShutdown.emit()
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -62,6 +48,29 @@ class AndorThread(QtCore.QRunnable):
 
         toggle.activate_buttons(self.ui)
         self.signals.finishedInitialize.emit()
+
+
+class ShutdownThread(QtCore.QRunnable):
+    def __init__(self, ui):
+        super(ShutdownThread, self).__init__()
+        self.signals = WorkerSignals()
+        self.ui = ui
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        andor.setshutter(1, 2, 0, 0)
+        andor.iscooleron()
+        if andor.coolerstatus == 0:
+            andor.shutdown()
+
+        elif andor.coolerstatus == 1:
+            andor.cooleroff()
+            while andor.temperature < -20:
+                time.sleep(1)
+            andor.shutdown()
+
+        toggle.deactivate_buttons(self.ui)
+        self.signals.finishedShutdown.emit()
 
 
 class TemperatureThread(QtCore.QRunnable):
@@ -92,13 +101,9 @@ class AcquireThread(QtCore.QRunnable):
 
         self.width = andor.width
 
-        self.track1plot = self.ui.Main_specwin.plot()
-        self.track2plot = self.ui.Main_specwin.plot()
-        self.diffplot = self.ui.Main_specwin.plot()
-
     @QtCore.pyqtSlot()
     def stop(self):
-        toggle.activate_buttons()
+        toggle.activate_buttons(self.ui)
         post.status(self.ui, '')
         self.ui.Main_start_acq.setText('Start Acquisition')
 
@@ -114,26 +119,81 @@ class AcquireThread(QtCore.QRunnable):
         self.ui.Main_start_acq.setText('Stop Acquisition')
 
         self.ui.Main_specwin.clear()
+        track1plot = self.ui.Main_specwin.plot()
+        track2plot = self.ui.Main_specwin.plot()
+        diffplot = self.ui.Main_specwin.plot()
 
         andor.setacquisitionmode(1)
         andor.setshutter(1, 1, 0, 0)
 
-        self.acquirecondition = True
-        while self.acquirecondition:
-            # TODO Shouldn't get exptime like this, store in the main gui and retrieve from there
-            andor.setexposuretime(float(self.ui.SpectralAcq_time_req.text()))
+        # self.acquirecondition = True
+        # while self.acquirecondition:
+        while self.ui.acquiring:
+            andor.setexposuretime(self.ui.exposuretime)
             andor.startacquisition()
             andor.waitforacquisition()
             andor.getacquireddata()
 
-            imagearray = andor.imagearray
-
-            self.track1plot.setData(imagearray[0:self.width - 1], pen='r', name='track1')
-            self.track2plot.setData(imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
-            self.diffplot.setData(imagearray[self.width:(2 * self.width) - 1] - imagearray[0:self.width - 1],
-                                  pen='w', name='trackdiff')
+            track1plot.setData(andor.imagearray[0:self.width - 1], pen='r', name='track1')
+            track2plot.setData(andor.imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
+            diffplot.setData(andor.imagearray[self.width:(2 * self.width) - 1] - andor.imagearray[0:self.width - 1],
+                             pen='w', name='trackdiff')
 
             andor.freeinternalmemory()
+
+            QApplication.processEvents()
+
+
+class AcquireTest(QtCore.QThread):
+    def __init__(self, ui):
+        super(AcquireTest, self).__init__(ui)
+        self.signals = WorkerSignals()
+        self.ui = ui
+        self.acquirecondition = None
+
+        self.width = andor.width
+
+    # @QtCore.pyqtSlot()
+    def stop(self):
+        toggle.activate_buttons(self.ui)
+        post.status(self.ui, '')
+        self.ui.Main_start_acq.setText('Start Acquisition')
+
+        self.acquirecondition = False
+        andor.setshutter(1, 2, 0, 0)
+
+        # self.signals.finishedAcquireStop.emit()
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        toggle.deactivate_buttons(self.ui, main_start_acq_stat=True)
+        post.status(self.ui, 'Acquiring...')
+        self.ui.Main_start_acq.setText('Stop Acquisition')
+
+        self.ui.Main_specwin.clear()
+        track1plot = self.ui.Main_specwin.plot()
+        track2plot = self.ui.Main_specwin.plot()
+        diffplot = self.ui.Main_specwin.plot()
+
+        andor.setacquisitionmode(1)
+        andor.setshutter(1, 1, 0, 0)
+
+        # self.acquirecondition = True
+        # while self.acquirecondition:
+        while self.ui.acquiring:
+            andor.setexposuretime(self.ui.exposuretime)
+            andor.startacquisition()
+            andor.waitforacquisition()
+            andor.getacquireddata()
+
+            track1plot.setData(andor.imagearray[0:self.width - 1], pen='r', name='track1')
+            track2plot.setData(andor.imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
+            diffplot.setData(andor.imagearray[self.width:(2 * self.width) - 1] - andor.imagearray[0:self.width - 1],
+                             pen='w', name='trackdiff')
+
+            andor.freeinternalmemory()
+
+            QApplication.processEvents()
 
 
 class SpectralThread(QtCore.QRunnable):
