@@ -2,7 +2,7 @@
 # Software to control the SIPCARS experimental setup
 # Priyank Shah - King's College London
 
-import sys, ctypes
+import sys, ctypes, time
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -12,9 +12,9 @@ from scancars.gui.forms import main
 from scancars.gui.css import setstyle
 from scancars.threads import uithreads
 from scancars.utils import post, toggle, savetofile
-from scancars.sdk.andor.pyandor import Cam
+from scancars.sdk.andor import pyandor
 
-andor = Cam()
+andor = pyandor.Cam()
 
 
 class ScanCARS(QMainWindow, main.Ui_MainWindow):
@@ -26,23 +26,18 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # TODO If speed becomes an issue, consider using numba package with jit decorator
             # Required to use maths functions instead of numpy
 
-        # TODO Reconsidering separating main functions completely.......
-
         # ------------------------------------------------------------------------------------------------------------
         # Importing relevant methods and classes
-        self.post = post
         self.threadpool = QtCore.QThreadPool()
 
+        # Creating acquisition and CCD temperature loop conditions
         self.acquiring = False
+        self.spectralacquiring = False
+        self.hyperacquiring = False
         self.gettingtemp = False
 
-        # Creating variables for tracks (perhaps create function here instead)
-        self.track1 = None
-        self.track2 = None
-        self.trackdiff = None
-        self.tracksum = None
-
         self.exposuretime = float(self.SpectralAcq_time_req.text())
+        self.darkexposure = 0.1
         self.width = andor.width
 
         self.Main_specwin.plotItem.addLegend()
@@ -55,29 +50,17 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.winspectracks = None
         self.winspecsum = None
 
-        # Main: connecting buttons to functions
+        # Connecting buttons to methods
         self.Main_start_acq.clicked.connect(lambda: self.main_startacq())
         self.Main_shutdown.clicked.connect(lambda: self.main_shutdown())
-
-        # CameraTemp: connecting buttons to functions
         self.CameraTemp_cooler_on.clicked.connect(lambda: self.cameratemp_cooler())
-
-        # SpectraWin: connecting buttons to functions
         self.SpectraWin_single_track.clicked.connect(lambda: self.spectrawin_tracks())
         self.SpectraWin_sum_track.clicked.connect(lambda: self.spectrawin_sum())
-
-        # Grating: connecting buttons to functions
         self.Grating_update.clicked.connect(lambda: self.grating_update())
-
-        # CameraOptions: connecting buttons to functions
         self.CameraOptions_update.clicked.connect(lambda: self.cameraoptions_update())
         self.CameraOptions_openimage.clicked.connect(lambda: self.cameraoptions_openimage())
-
-        # SpectralAcq: connecting buttons to functions
         self.SpectralAcq_update_time.clicked.connect(lambda: self.spectralacq_updatetime())
         self.SpectralAcq_start.clicked.connect(lambda: self.spectralacq_start())
-
-        # HyperAcq: connecting buttons to functions
         self.HyperAcq_start.clicked.connect(lambda: self.hyperacq_start())
 
         # ------------------------------------------------------------------------------------------------------------
@@ -99,12 +82,31 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # Initialize: defining functions
     def initialize_andor(self):
-        initialize = uithreads.InitializeThread(self)
-        self.threadpool.start(initialize)
-        initialize.signals.finishedInitialize.connect(lambda: self.gettemp())
+        toggle.deactivate_buttons(self)
 
-    def gettemp(self):
+        randtrack = np.array([int(self.CameraOptions_track1lower.text()),
+                              int(self.CameraOptions_track1upper.text()),
+                              int(self.CameraOptions_track2lower.text()),
+                              int(self.CameraOptions_track2upper.text())])
+
+        errorinitialize = andor.initialize()
+        if errorinitialize != 'DRV_SUCCESS':
+            post.eventlog(self, 'Andor: Initialize error. ' + errorinitialize)
+            return
+        andor.getdetector()
+        andor.setshutter(1, 2, 0, 0)
+        andor.setreadmode(2)
+        andor.setrandomtracks(2, randtrack)
+        andor.setadchannel(1)
+        andor.settriggermode(0)
+        andor.sethsspeed(1, 0)
+        andor.setvsspeed(4)
+        andor.dim = andor.width * andor.randomtracks
+
+        toggle.activate_buttons(self)
+
         post.eventlog(self, 'Andor: Successfully initialized.')
+
         self.gettingtemp = True
         gettemperature = uithreads.TemperatureThread(self)
         self.threadpool.start(gettemperature)
@@ -131,12 +133,34 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.acquiring = False
             toggle.activate_buttons(self)
             post.status(self, '')
+            andor.setshutter(1, 2, 0, 0)
             self.Main_start_acq.setText('Start Acquisition')
 
     def main_shutdown(self):
-        shutdown = uithreads.ShutdownThread(self)
-        self.threadpool.start(shutdown)
-        shutdown.signals.finishedShutdown.connect(lambda: post.eventlog(self, 'ScanCARS can now be safely closed.'))
+        self.acquiring = False
+        self.gettingtemp = False
+
+        andor.setshutter(1, 2, 0, 0)
+        andor.iscooleron()
+        if andor.coolerstatus == 0:
+            andor.shutdown()
+
+            post.eventlog(self, 'ScanCARS can now be safely closed.')
+            toggle.deactivate_buttons(self)
+
+        elif andor.coolerstatus == 1:
+            andor.cooleroff()
+            self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
+            self.CameraTemp_cooler_on.setText('Cooler On')
+            post.eventlog(self, 'Andor: Waiting for camera to return to normal temp...')
+            andor.gettemperature()
+            while andor.temperature < -20:
+                time.sleep(2)
+                andor.gettemperature()
+            andor.shutdown()
+
+            post.eventlog(self, 'ScanCARS can now be safely closed.')
+            toggle.deactivate_buttons(self)
 
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
@@ -200,10 +224,12 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
     def spectralacq_updatetime(self):
         # Storing the acquisition time
         self.exposuretime = float(self.SpectralAcq_time_req.text())
-        post.eventlog(self, 'Andor: Exposure time set to ' + self.exposuretime + 's')
+        post.eventlog(self, 'Andor: Exposure time set to ' + str(self.exposuretime) + 's')
 
     def spectralacq_start(self):
-        pass
+        spectralacqstart = uithreads.SpectralThread(self)
+        self.threadpool.start(spectralacqstart)
+
 
     # HyperAcq: defining functions
     def hyperacq_start(self):
