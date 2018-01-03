@@ -1,8 +1,5 @@
-# ScanCARS v1
-# Software to control the SIPCARS experimental setup
-# Priyank Shah - King's College London
-
-import sys, ctypes, time
+import sys
+import time
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -11,10 +8,8 @@ from scancars.gui import dialogs
 from scancars.gui.forms import main
 from scancars.gui.css import setstyle
 from scancars.threads import uithreads
-from scancars.utils import post, toggle, savetofile
+from scancars.utils import post, toggle
 from scancars.sdk.andor import pyandor
-
-andor = pyandor.Cam()
 
 
 class ScanCARS(QMainWindow, main.Ui_MainWindow):
@@ -29,6 +24,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
         # Importing relevant methods and classes
         self.threadpool = QtCore.QThreadPool()
+        self.andor = pyandor.Cam()
 
         # Creating acquisition and CCD temperature loop conditions
         self.acquiring = False
@@ -38,7 +34,6 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         self.exposuretime = float(self.SpectralAcq_time_req.text())
         self.darkexposure = 0.1
-        self.width = andor.width
 
         self.Main_specwin.plotItem.addLegend()
 
@@ -70,15 +65,13 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         post.event_date(self)
 
         # Initializing the camera
-        # self.cam = Cam()
         self.initialize_andor()
 
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
         post.eventlog(self, 'An error has occurred. This program will exit after the Andor camera has shut down.')
-        andorthread = uithreads.AndorThread(self)
-        andorthread.shutdown()
+        self.main_shutdown()
 
     # Initialize: defining functions
     def initialize_andor(self):
@@ -89,19 +82,22 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
                               int(self.CameraOptions_track2lower.text()),
                               int(self.CameraOptions_track2upper.text())])
 
-        errorinitialize = andor.initialize()
+        errorinitialize = self.andor.initialize()
         if errorinitialize != 'DRV_SUCCESS':
             post.eventlog(self, 'Andor: Initialize error. ' + errorinitialize)
             return
-        andor.getdetector()
-        andor.setshutter(1, 2, 0, 0)
-        andor.setreadmode(2)
-        andor.setrandomtracks(2, randtrack)
-        andor.setadchannel(1)
-        andor.settriggermode(0)
-        andor.sethsspeed(1, 0)
-        andor.setvsspeed(4)
-        andor.dim = andor.width * andor.randomtracks
+        self.andor.getdetector()
+        self.andor.setshutter(1, 2, 0, 0)
+        self.andor.setreadmode(2)
+        self.andor.setrandomtracks(2, randtrack)
+        self.andor.setadchannel(1)
+        self.andor.settriggermode(0)
+        self.andor.sethsspeed(1, 0)
+        self.andor.setvsspeed(4)
+
+        time.sleep(2)
+
+        self.andor.dim = self.andor.width * self.andor.randomtracks
 
         toggle.activate_buttons(self)
 
@@ -133,31 +129,31 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.acquiring = False
             toggle.activate_buttons(self)
             post.status(self, '')
-            andor.setshutter(1, 2, 0, 0)
+            self.andor.setshutter(1, 2, 0, 0)
             self.Main_start_acq.setText('Start Acquisition')
 
     def main_shutdown(self):
         self.acquiring = False
         self.gettingtemp = False
 
-        andor.setshutter(1, 2, 0, 0)
-        andor.iscooleron()
-        if andor.coolerstatus == 0:
-            andor.shutdown()
+        self.andor.setshutter(1, 2, 0, 0)
+        self.andor.iscooleron()
+        if self.andor.coolerstatus == 0:
+            self.andor.shutdown()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
 
-        elif andor.coolerstatus == 1:
-            andor.cooleroff()
+        elif self.andor.coolerstatus == 1:
+            self.andor.cooleroff()
             self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
             self.CameraTemp_cooler_on.setText('Cooler On')
             post.eventlog(self, 'Andor: Waiting for camera to return to normal temp...')
-            andor.gettemperature()
-            while andor.temperature < -20:
+            self.andor.gettemperature()
+            while self.andor.temperature < -20:
                 time.sleep(2)
-                andor.gettemperature()
-            andor.shutdown()
+                self.andor.gettemperature()
+                self.andor.shutdown()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
@@ -165,25 +161,25 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
     # CameraTemp: defining functions
     def cameratemp_cooler(self):
         # Checking to see if the cooler is on or off
-        messageIsCoolerOn = andor.iscooleron()
+        messageIsCoolerOn = self.andor.iscooleron()
         if messageIsCoolerOn != 'DRV_SUCCESS':
             post.eventlog(self, 'Andor: IsCoolerOn error. ' + messageIsCoolerOn)
 
         else:
-            if andor.coolerstatus == 0:
+            if self.andor.coolerstatus == 0:
                 # Turning the cooler on and checking to see if it has been turned on
-                andor.cooleron()
-                andor.iscooleron()
-                if andor.coolerstatus == 1:
+                self.andor.cooleron()
+                self.andor.iscooleron()
+                if self.andor.coolerstatus == 1:
                     post.eventlog(self, 'Andor: Cooler on.')
                     self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #323e30}")
                     self.CameraTemp_cooler_on.setText('Cooler Off')
 
-            elif andor.coolerstatus == 1:
+            elif self.andor.coolerstatus == 1:
                 # Turning the cooler off and checking to see if it has been turned off
-                andor.cooleroff()
-                andor.iscooleron()
-                if andor.coolerstatus == 0:
+                self.andor.cooleroff()
+                self.andor.iscooleron()
+                if self.andor.coolerstatus == 0:
                     post.eventlog(self, 'Andor: Cooler off.')
                     self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
                     self.CameraTemp_cooler_on.setText('Cooler On')
@@ -224,6 +220,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
     def spectralacq_updatetime(self):
         # Storing the acquisition time
         self.exposuretime = float(self.SpectralAcq_time_req.text())
+        self.andor.setexposuretime(self.exposuretime)
+        self.andor.getacquisitiontimings()
+        self.SpectralAcq_actual_time.setText(str(round(self.andor.exposure, 3)))
         post.eventlog(self, 'Andor: Exposure time set to ' + str(self.exposuretime) + 's')
 
     def spectralacq_start(self):

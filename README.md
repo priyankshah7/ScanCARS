@@ -34,7 +34,7 @@ The following python packages are also required:
 ### Data output
 File are stored in the hierarchical data format (HDF5), a format used to store
 multidimensional data.  
-+ Single-point spectroscopic data: *.h5 file*
++ Spectral data: *.h5 file*
 + Hyperspectral data: *.h5 file*
 
 

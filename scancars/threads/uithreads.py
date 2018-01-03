@@ -7,11 +7,8 @@ from scancars.sdk.andor.pyandor import Cam
 from scancars.gui.forms import main
 from scancars.utils import toggle, post
 
-andor = Cam()
-
 
 class WorkerSignals(QtCore.QObject):
-    finishedShutdown = QtCore.pyqtSignal()
     finishedAcquire = QtCore.pyqtSignal()
     finishedAcquireStop = QtCore.pyqtSignal()
 
@@ -31,8 +28,8 @@ class TemperatureThread(QtCore.QRunnable):
     @QtCore.pyqtSlot()
     def run(self):
         while self.ui.gettingtemp:
-            andor.gettemperature()
-            self.ui.CameraTemp_temp_actual.setText(str(andor.temperature))
+            self.ui.andor.gettemperature()
+            self.ui.CameraTemp_temp_actual.setText(str(self.ui.andor.temperature))
             time.sleep(4)
 
 
@@ -43,11 +40,11 @@ class AcquireThread(QtCore.QRunnable):
         self.ui = ui
         self.acquirecondition = None
 
-        self.width = andor.width
+        self.width = self.ui.andor.width
 
     @QtCore.pyqtSlot()
     def run(self):
-        toggle.deactivate_buttons(self.ui, main_start_acq_stat=True, spectralacq_update_stat=True)
+        toggle.deactivate_buttons(self.ui, main_start_acq_stat=True)
         post.status(self.ui, 'Acquiring...')
         self.ui.Main_start_acq.setText('Stop Acquisition')
 
@@ -56,77 +53,77 @@ class AcquireThread(QtCore.QRunnable):
         track2plot = self.ui.Main_specwin.plot()
         diffplot = self.ui.Main_specwin.plot()
 
-        andor.setacquisitionmode(1)
-        andor.setshutter(1, 1, 0, 0)
+        self.ui.andor.setacquisitionmode(1)
+        self.ui.andor.setshutter(1, 1, 0, 0)
+        self.ui.andor.setexposuretime(self.ui.exposuretime)
 
         # self.acquirecondition = True
         # while self.acquirecondition:
         while self.ui.acquiring:
-            andor.setexposuretime(self.ui.exposuretime)
-            andor.startacquisition()
-            andor.waitforacquisition()
-            andor.getacquireddata()
+            self.ui.andor.startacquisition()
+            self.ui.andor.waitforacquisition()
+            self.ui.andor.getacquireddata()
 
-            track1plot.setData(andor.imagearray[0:self.width - 1], pen='r', name='track1')
-            track2plot.setData(andor.imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
-            diffplot.setData(andor.imagearray[self.width:(2 * self.width) - 1] - andor.imagearray[0:self.width - 1],
+            track1plot.setData(self.ui.andor.imagearray[0:self.width - 1], pen='r', name='track1')
+            track2plot.setData(self.ui.andor.imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
+            diffplot.setData(self.ui.andor.imagearray[self.width:(2 * self.width) - 1] - self.ui.andor.imagearray[0:self.width - 1],
                              pen='w', name='trackdiff')
 
-            andor.freeinternalmemory()
+            self.ui.andor.freeinternalmemory()
 
             QApplication.processEvents()
 
 
-class AcquireTest(QtCore.QThread):
-    def __init__(self, ui):
-        super(AcquireTest, self).__init__(ui)
-        self.signals = WorkerSignals()
-        self.ui = ui
-        self.acquirecondition = None
-
-        self.width = andor.width
-
-    # @QtCore.pyqtSlot()
-    def stop(self):
-        toggle.activate_buttons(self.ui)
-        post.status(self.ui, '')
-        self.ui.Main_start_acq.setText('Start Acquisition')
-
-        self.acquirecondition = False
-        andor.setshutter(1, 2, 0, 0)
+# class AcquireTest(QtCore.QThread):
+#     def __init__(self, ui):
+#         super(AcquireTest, self).__init__(ui)
+#         self.signals = WorkerSignals()
+#         self.ui = ui
+#         self.acquirecondition = None
+#
+#         self.width = andor.width
+#
+#     # @QtCore.pyqtSlot()
+#     def stop(self):
+#         toggle.activate_buttons(self.ui)
+#         post.status(self.ui, '')
+#         self.ui.Main_start_acq.setText('Start Acquisition')
+#
+#         self.acquirecondition = False
+#         andor.setshutter(1, 2, 0, 0)
 
         # self.signals.finishedAcquireStop.emit()
-
-    @QtCore.pyqtSlot()
-    def run(self):
-        toggle.deactivate_buttons(self.ui, main_start_acq_stat=True, spectralacq_update_stat=True)
-        post.status(self.ui, 'Acquiring...')
-        self.ui.Main_start_acq.setText('Stop Acquisition')
-
-        self.ui.Main_specwin.clear()
-        track1plot = self.ui.Main_specwin.plot()
-        track2plot = self.ui.Main_specwin.plot()
-        diffplot = self.ui.Main_specwin.plot()
-
-        andor.setacquisitionmode(1)
-        andor.setshutter(1, 1, 0, 0)
-
-        # self.acquirecondition = True
-        # while self.acquirecondition:
-        while self.ui.acquiring:
-            andor.setexposuretime(self.ui.exposuretime)
-            andor.startacquisition()
-            andor.waitforacquisition()
-            andor.getacquireddata()
-
-            track1plot.setData(andor.imagearray[0:self.width - 1], pen='r', name='track1')
-            track2plot.setData(andor.imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
-            diffplot.setData(andor.imagearray[self.width:(2 * self.width) - 1] - andor.imagearray[0:self.width - 1],
-                             pen='w', name='trackdiff')
-
-            andor.freeinternalmemory()
-
-            QApplication.processEvents()
+    #
+    # @QtCore.pyqtSlot()
+    # def run(self):
+    #     toggle.deactivate_buttons(self.ui, main_start_acq_stat=True, spectralacq_update_stat=True)
+    #     post.status(self.ui, 'Acquiring...')
+    #     self.ui.Main_start_acq.setText('Stop Acquisition')
+    #
+    #     self.ui.Main_specwin.clear()
+    #     track1plot = self.ui.Main_specwin.plot()
+    #     track2plot = self.ui.Main_specwin.plot()
+    #     diffplot = self.ui.Main_specwin.plot()
+    #
+    #     andor.setacquisitionmode(1)
+    #     andor.setshutter(1, 1, 0, 0)
+    #
+    #     # self.acquirecondition = True
+    #     # while self.acquirecondition:
+    #     while self.ui.acquiring:
+    #         andor.setexposuretime(self.ui.exposuretime)
+    #         andor.startacquisition()
+    #         andor.waitforacquisition()
+    #         andor.getacquireddata()
+    #
+    #         track1plot.setData(andor.imagearray[0:self.width - 1], pen='r', name='track1')
+    #         track2plot.setData(andor.imagearray[self.width:(2 * self.width) - 1], pen='g', name='track2')
+    #         diffplot.setData(andor.imagearray[self.width:(2 * self.width) - 1] - andor.imagearray[0:self.width - 1],
+    #                          pen='w', name='trackdiff')
+    #
+    #         andor.freeinternalmemory()
+    #
+    #         QApplication.processEvents()
 
 
 class SpectralThread(QtCore.QRunnable):
@@ -144,35 +141,35 @@ class SpectralThread(QtCore.QRunnable):
         darkcount = int(self.ui.SpectralAcq_darkfield.text())
 
         # Darkcount acquisitions
-        andor.setacquisitionmode(3)
-        andor.setshutter(1, 2, 0, 0)
-        andor.setexposuretime(float(self.ui.darkexposure))
-        andor.setnumberaccumulations(1)
-        andor.setnumberkinetics(100)    # Need to change back to normal
-        andor.setkineticcycletime(0.05)
+        self.ui.andor.setacquisitionmode(3)
+        self.ui.andor.setshutter(1, 2, 0, 0)
+        self.ui.andor.setexposuretime(float(self.ui.darkexposure))
+        self.ui.andor.setnumberaccumulations(1)
+        self.ui.andor.setnumberkinetics(100)    # Need to change back to normal
+        self.ui.andor.setkineticcycletime(0.05)
 
         time.sleep(2)
 
-        error = andor.startacquisition()
-        andor.waitforacquisition()
-        andor.getacquireddata_kinetic(100)  # Need to change back
-        darkcount_data = andor.imagearray
+        error = self.ui.andor.startacquisition()
+        self.ui.andor.waitforacquisition()
+        self.ui.andor.getacquireddata_kinetic(100)  # Need to change back
+        darkcount_data = self.ui.andor.imagearray
 
         print(error)
         print('darkcount finished')
 
         # Spectral acquisitions
-        andor.setshutter(1, 1, 0, 0)
-        andor.setexposuretime(exposuretime)
-        andor.setnumberkinetics(100)    # Need to change back to normal
-        andor.setacquisitionmode(3)
+        self.ui.andor.setshutter(1, 1, 0, 0)
+        self.ui.andor.setexposuretime(exposuretime)
+        self.ui.andor.setnumberkinetics(100)    # Need to change back to normal
+        self.ui.andor.setacquisitionmode(3)
 
         time.sleep(2)
 
-        andor.startacquisition()
-        andor.waitforacquisition()
-        andor.getacquireddata_kinetic(100)  # Need to change back
-        spectral_data = andor.imagearray
+        self.ui.andor.startacquisition()
+        self.ui.andor.waitforacquisition()
+        self.ui.andor.getacquireddata_kinetic(100)  # Need to change back
+        spectral_data = self.ui.andor.imagearray
 
         print('spectra finished')
 

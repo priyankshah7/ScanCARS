@@ -15,7 +15,7 @@ class Cam:
         self.exposure = None
         self.kinetic = None
         self.acquisitionmode = None
-        self.getstatus = None
+        self.getstatusval = None
         self.randomtracks = None
         self.imagearray = None
         self.dim = None
@@ -111,7 +111,7 @@ class Cam:
         valid value not less than the given value. The actual cycle time used is
         obtained by GetAcquisitionTimings.
         """
-        error = dll.SetAccumulationCycleTime(time)
+        error = dll.SetAccumulationCycleTime(ctypes.c_float(time))
         return ERROR_CODE[error]
 
     def setkineticcycletime(self, time):
@@ -123,7 +123,7 @@ class Cam:
          not less than the given value. The actual time used is obtained
          by GetAcquisitionTimings.
         """
-        error = dll.SetKineticCycleTime(time)
+        error = dll.SetKineticCycleTime(ctypes.c_float(time))
         return ERROR_CODE[error]
 
     def setshutter(self, typeshut, mode, closingtime, openingtime):
@@ -170,7 +170,7 @@ class Cam:
         """
         This function will return the data from the last acquisition. The data
         are returned as long integers (32bit signed integers). The array must
-        be large enough
+        be large enough. NOTE THAT THIS IS FOR THE SINGLE SCAN MODE.
         """
         # TODO Can only be used for spectra (not for CCD tracks unless updated)
         self.imagearray = None
@@ -181,6 +181,43 @@ class Cam:
         error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim)
 
         self.imagearray = np.asarray(cimage[:])
+        return ERROR_CODE[error]
+
+    def getacquireddata_kinetic(self, numscans):
+        """
+        This function will return the data from the last acquisition. The data
+        are returned as long integers (32bit signed integers). The array must
+        be large enough
+        """
+        self.imagearray = None
+
+        cimagearray = ctypes.c_int * numscans * self.dim
+        cimage = cimagearray()
+
+        # dimx = ctypes.c_int
+        # dimy = ctypes.POINTER(ctypes.c_int)
+        #
+        # arrptr = ctypes.POINTER(ctypes.POINTER(ctypes.c_int))
+        # for ii in range(self.dim):
+        #     arrptr[ii] = dimx()
+        #
+        #     for jj in range(numscans):
+        #         arrptr[ii][jj] = dimy()
+        #
+        # cimage = arrptr
+
+        error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim)
+
+        self.imagearray = np.asarray(cimage[:])
+        return ERROR_CODE[error]
+
+    def setframetransfermode(self, mode):
+        """
+        This function will set whether an acquisition will readout in Frame Transfer Mode.
+        If the acquisition mode is Single Scan or Fast Kinetics this call will have no affect.
+        """
+        error = dll.SetFrameTransferMode(mode)
+
         return ERROR_CODE[error]
 
     def setexposuretime(self, time):
@@ -347,7 +384,7 @@ class Cam:
         status = ctypes.c_long()
 
         error = dll.GetStatus(ctypes.byref(status))
-        self.getstatus = status.value
+        self.getstatusval = status.value
         return ERROR_CODE[error]
 
     def abortacquisition(self):
