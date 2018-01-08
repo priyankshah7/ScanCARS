@@ -100,7 +100,6 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.andor.dim = self.andor.width * self.andor.randomtracks
 
         toggle.activate_buttons(self)
-
         post.eventlog(self, 'Andor: Successfully initialized.')
 
         self.gettingtemp = True
@@ -145,15 +144,18 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             toggle.deactivate_buttons(self)
 
         elif self.andor.coolerstatus == 1:
+            self.andor.gettemperature()
+            if self.andor.temperature < -20:
+                post.eventlog(self, 'Andor: Waiting for camera to return to normal temp...')
             self.andor.cooleroff()
             self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
             self.CameraTemp_cooler_on.setText('Cooler On')
-            post.eventlog(self, 'Andor: Waiting for camera to return to normal temp...')
-            self.andor.gettemperature()
+            time.sleep(1)
             while self.andor.temperature < -20:
-                time.sleep(2)
+                time.sleep(3)
                 self.andor.gettemperature()
-                self.andor.shutdown()
+
+            self.andor.shutdown()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
@@ -168,6 +170,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         else:
             if self.andor.coolerstatus == 0:
                 # Turning the cooler on and checking to see if it has been turned on
+                self.andor.settemperature(int(self.CameraTemp_temp_req.text()))
                 self.andor.cooleron()
                 self.andor.iscooleron()
                 if self.andor.coolerstatus == 1:
