@@ -173,6 +173,8 @@ class Cam:
         be large enough. NOTE THAT THIS IS FOR THE SINGLE SCAN MODE.
         """
         # TODO Can only be used for spectra (not for CCD tracks unless updated)
+        # TODO move the kinetic version here and add a numscans method input
+        # TODO Move the cimagearray to the uithread (shouldn't be called for every update)
         self.imagearray = None
 
         cimagearray = ctypes.c_int * self.dim
@@ -190,23 +192,9 @@ class Cam:
         be large enough
         """
         self.imagearray = None
+        cimage = (ctypes.c_long * numscans * self.dim)()
 
-        cimagearray = ctypes.c_int * numscans * self.dim
-        cimage = cimagearray()
-
-        # dimx = ctypes.c_int
-        # dimy = ctypes.POINTER(ctypes.c_int)
-        #
-        # arrptr = ctypes.POINTER(ctypes.POINTER(ctypes.c_int))
-        # for ii in range(self.dim):
-        #     arrptr[ii] = dimx()
-        #
-        #     for jj in range(numscans):
-        #         arrptr[ii][jj] = dimy()
-        #
-        # cimage = arrptr
-
-        error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim)
+        error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim*numscans)
 
         self.imagearray = np.asarray(cimage[:])
         return ERROR_CODE[error]
@@ -384,10 +372,11 @@ class Cam:
         status = ctypes.c_long()
 
         error = dll.GetStatus(ctypes.byref(status))
-        self.getstatusval = status.value
+        self.getstatusval = ERROR_CODE[status.value]
         return ERROR_CODE[error]
 
-    def abortacquisition(self):
+    @staticmethod
+    def abortacquisition():
         """
         :return error message(string):
 
