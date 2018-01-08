@@ -133,6 +133,7 @@ class SpectralThread(QtCore.QRunnable):
 
     @QtCore.pyqtSlot()
     def run(self):
+        toggle.deactivate_buttons(self.ui)
         self.ui.spectralacquiring = True
         post.status(self.ui, 'Spectral acquisition in progress...')
 
@@ -140,50 +141,62 @@ class SpectralThread(QtCore.QRunnable):
         frames = int(self.ui.SpectralAcq_frames.text())
         darkcount = int(self.ui.SpectralAcq_darkfield.text())
 
+        # Expected time
+        total = (darkcount * self.ui.darkexposure) + (frames * exposuretime)
+        progress_darkcount = ((darkcount * self.ui.darkexposure)/total) * 100
+
         # Darkcount acquisitions
         self.ui.andor.setacquisitionmode(3)
         self.ui.andor.setshutter(1, 2, 0, 0)
         self.ui.andor.setexposuretime(float(self.ui.darkexposure))
         self.ui.andor.setnumberaccumulations(1)
-        self.ui.andor.setnumberkinetics(100)    # Need to change back to normal
+        self.ui.andor.setnumberkinetics(darkcount)
         self.ui.andor.setkineticcycletime(0.05)
 
         time.sleep(2)
 
-        error = self.ui.andor.startacquisition()
-        self.ui.andor.waitforacquisition()
-        self.ui.andor.getacquireddata_kinetic(100)  # Need to change back
+        self.ui.andor.startacquisition()
+
+        self.ui.andor.getstatus()
+        while self.ui.andor.getstatusval == 'DRV_ACQUIRING':
+            time.sleep(self.ui.darkexposure/10)
+            self.ui.andor.getstatus()
+
+        self.ui.andor.getacquireddata_kinetic(darkcount)
         darkcount_data = self.ui.andor.imagearray
 
-        print(error)
-        print('darkcount finished')
+        self.ui.Main_progress.setValue(progress_darkcount)
 
         # Spectral acquisitions
         self.ui.andor.setshutter(1, 1, 0, 0)
         self.ui.andor.setexposuretime(exposuretime)
-        self.ui.andor.setnumberkinetics(100)    # Need to change back to normal
+        self.ui.andor.setnumberkinetics(frames)
         self.ui.andor.setacquisitionmode(3)
 
         time.sleep(2)
 
         self.ui.andor.startacquisition()
-        self.ui.andor.waitforacquisition()
-        self.ui.andor.getacquireddata_kinetic(100)  # Need to change back
+
+        self.ui.andor.getstatus()
+        while self.ui.andor.getstatusval == 'DRV_ACQUIRING':
+            time.sleep(exposuretime/10)
+            self.ui.andor.getstatus()
+
+        self.ui.andor.getacquireddata_kinetic(frames)
         spectral_data = self.ui.andor.imagearray
 
-        print('spectra finished')
-
         # Post-process
-        acquireddata = spectral_data - np.mean(darkcount_data, 0)
+        acquireddata = np.mean(spectral_data, 1) - np.mean(darkcount_data, 1)
 
         self.ui.Main_specwin.clear()
-        self.ui.Main_specwin.plot(spectral_data[5, 0:511])
-        self.ui.Main_specwin.plot(spectral_data[5, 512:1023])
-
-        print('postprocess finished')
+        self.ui.Main_specwin.plot(acquireddata[0:511], pen='r')
+        self.ui.Main_specwin.plot(acquireddata[512:1023], pen='g')
+        self.ui.Main_specwin.plot(acquireddata[512:1023]-acquireddata[0:511], pen='w')
 
         post.status(self.ui, '')
         self.ui.spectralacquiring = False
+        self.ui.Main_progress.setValue(100)
+        toggle.activate_buttons(self.ui)
 
 
 class HyperspectralThread(QtCore.QRunnable):
