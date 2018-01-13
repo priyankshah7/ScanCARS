@@ -166,7 +166,7 @@ class Cam:
         error = dll.StartAcquisition()
         return ERROR_CODE[error]
 
-    def getacquireddata(self):
+    def getacquireddata(self, cimage):
         """
         This function will return the data from the last acquisition. The data
         are returned as long integers (32bit signed integers). The array must
@@ -175,10 +175,9 @@ class Cam:
         # TODO Can only be used for spectra (not for CCD tracks unless updated)
         # TODO move the kinetic version here and add a numscans method input
         # TODO Move the cimagearray to the uithread (shouldn't be called for every update)
-        self.imagearray = None
+        # self.imagearray = None
 
-        cimagearray = ctypes.c_int * self.dim
-        cimage = cimagearray()
+        # cimage = (ctypes.c_int * self.dim)()
 
         error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim)
 
@@ -192,7 +191,7 @@ class Cam:
         be large enough
         """
         self.imagearray = None
-        cimage = (ctypes.c_long * numscans * self.dim)()
+        cimage = (ctypes.c_int * numscans * self.dim)()
 
         error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim*numscans)
 
