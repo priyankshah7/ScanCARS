@@ -1,5 +1,6 @@
 import sys
 import time
+import ctypes
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -32,10 +33,16 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.hyperacquiring = False
         self.gettingtemp = False
 
+        # Storing exposure times
         self.exposuretime = float(self.SpectralAcq_time_req.text())
         self.darkexposure = 0.1
 
-        self.Main_specwin.plotItem.addLegend()
+        # Plot settings
+        # self.Main_specwin.plotItem.addLegend()
+        self.Main_specwin.plotItem.showGrid(x=True, y=True)
+        self.Main_specwin.setXRange(-10, 520, padding=0)
+        # self.Main_specwin.setYRange(-65000, 65000, padding=0)
+        # self.Main_specwin.plotItem.
 
         # Setting the css-style file
         setstyle.main(self)
@@ -66,7 +73,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # Initializing the camera
         self.initialize_andor()
-
+        self.width = self.andor.width
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
@@ -77,23 +84,24 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
     def initialize_andor(self):
         toggle.deactivate_buttons(self)
 
+        # Storing the positions of the random tracks in an array
         randtrack = np.array([int(self.CameraOptions_track1lower.text()),
                               int(self.CameraOptions_track1upper.text()),
                               int(self.CameraOptions_track2lower.text()),
                               int(self.CameraOptions_track2upper.text())])
 
-        errorinitialize = self.andor.initialize()
+        errorinitialize = self.andor.initialize()       # Initializing the detector
         if errorinitialize != 'DRV_SUCCESS':
             post.eventlog(self, 'Andor: Initialize error. ' + errorinitialize)
             return
-        self.andor.getdetector()
-        self.andor.setshutter(1, 2, 0, 0)
-        self.andor.setreadmode(2)
-        self.andor.setrandomtracks(2, randtrack)
-        self.andor.setadchannel(1)
-        self.andor.settriggermode(0)
-        self.andor.sethsspeed(1, 0)
-        self.andor.setvsspeed(4)
+        self.andor.getdetector()                        # Getting information from the detector
+        self.andor.setshutter(1, 2, 0, 0)               # Ensuring the shutter is closed
+        self.andor.setreadmode(2)                       # Setting the read mode to Random Tracks
+        self.andor.setrandomtracks(2, randtrack)        # Setting the position of the random tracks
+        self.andor.setadchannel(1)                      # Setting the AD channel
+        self.andor.settriggermode(0)                    # Setting the trigger mode to 'internal'
+        self.andor.sethsspeed(1, 0)                     # Setting the horiz. shift speed
+        self.andor.setvsspeed(4)                        # Setting the verti. shift speed
 
         time.sleep(2)
 
@@ -102,34 +110,70 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         toggle.activate_buttons(self)
         post.eventlog(self, 'Andor: Successfully initialized.')
 
+        # Starting the temperature thread to monitor the temperature of the camera
         self.gettingtemp = True
         gettemperature = uithreads.TemperatureThread(self)
         self.threadpool.start(gettemperature)
 
     # Main: defining functions
     def main_startacq(self):
-        # TODO Need to choose whether to use QThread or ORunnable
-        startacq = uithreads.AcquireThread(self)
-        if self.acquiring is False:
-            self.acquiring = True
-            self.threadpool.start(startacq)
-        #
-        # elif self.acquiring is True:
-        #     startacq.stop()
-        #     startacq.signals.finishedAcquireStop.connect(lambda: self.acquiring is False)
-        #     # TODO Test the above lambda
-
-        # startacq = uithreads.AcquireTest(self)
+        # startacq = uithreads.AcquireThread(self)
         # if self.acquiring is False:
         #     self.acquiring = True
-        #     startacq.start()
+        #     self.threadpool.start(startacq)
+        #
+        # elif self.acquiring is True:
+        #     self.acquiring = False
+        #     toggle.activate_buttons(self)
+        #     post.status(self, '')
+        #     self.andor.setshutter(1, 2, 0, 0)
+        #     self.Main_start_acq.setText('Start Acquisition')
+
+        # NOTE The acquiring thread has been moved here (no thread)
+        # This has solved the plot hanging after a certain number of plots
+        # This needs to be moved into a multiprocessing process though
+
+        if self.acquiring is False:
+            self.acquiring = True
+            toggle.deactivate_buttons(self, main_start_acq_stat=True)
+            post.status(self, 'Acquiring...')
+            self.Main_start_acq.setText('Stop Acquisition')
+
+            self.Main_specwin.clear()
+            track1plot = self.Main_specwin.plot(pen='r', name='track1')
+            track2plot = self.Main_specwin.plot(pen='g', name='track2')
+            diffplot = self.Main_specwin.plot(pen='w', name='trackdiff')
+
+            cimage = (ctypes.c_int * self.andor.dim)()
+
+            self.andor.freeinternalmemory()
+            self.andor.setacquisitionmode(1)
+            self.andor.setshutter(1, 1, 0, 0)
+            self.andor.setexposuretime(self.exposuretime)
+
+            # istracksvisisble = dialogs.SPECTRACKS.isVisible()
+            # if istracksvisisble:
+            #     print('true')
+
+            while self.acquiring:
+                self.andor.startacquisition()
+                self.andor.waitforacquisition()
+                self.andor.getacquireddata(cimage)
+
+                track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
+                track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
+                diffplot.setData(
+                    self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] - self.andor.imagearray[
+                                                                                0:self.andor.width - 1], )
+
+                QtCore.QCoreApplication.processEvents()
 
         elif self.acquiring is True:
             self.acquiring = False
             toggle.activate_buttons(self)
             post.status(self, '')
-            self.andor.setshutter(1, 2, 0, 0)
             self.Main_start_acq.setText('Start Acquisition')
+            self.andor.setshutter(1, 2, 0, 0)
 
     def main_shutdown(self):
         self.acquiring = False
