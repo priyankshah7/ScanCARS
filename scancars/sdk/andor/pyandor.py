@@ -20,19 +20,23 @@ class Cam:
         self.imagearray = None
         self.dim = None
 
-    def initialize(self):
+    @staticmethod
+    def initialize():
         error = dll.Initialize("C:\\Program Files\\Andor iXon")
         return ERROR_CODE[error]
 
-    def cooleron(self):
+    @staticmethod
+    def cooleron():
         error = dll.CoolerON()
         return ERROR_CODE[error]
 
-    def cooleroff(self):
+    @staticmethod
+    def cooleroff():
         error = dll.CoolerOFF()
         return ERROR_CODE[error]
 
-    def settemperature(self, temperature):
+    @staticmethod
+    def settemperature(temperature):
         """
         :param temperature:
         :return: error message(string)
@@ -55,11 +59,13 @@ class Cam:
         self.temperature = temperature.value
         return ERROR_CODE[error]
 
-    def shutdown(self):
+    @staticmethod
+    def shutdown():
         error = dll.ShutDown()
         return ERROR_CODE[error]
 
-    def setreadmode(self, mode):
+    @staticmethod
+    def setreadmode(mode):
         # 0: Full vertical binning
         # 1: multi track
         # 2: random track
@@ -68,7 +74,8 @@ class Cam:
         error = dll.SetReadMode(mode)
         return ERROR_CODE[error]
 
-    def setacquisitionmode(self, mode):
+    @staticmethod
+    def setacquisitionmode(mode):
         # 1: Single Scan
         # 2: Accumulate
         # 3: Kinetics
@@ -78,7 +85,8 @@ class Cam:
         error = dll.SetAcquisitionMode(mode)
         return ERROR_CODE[error]
 
-    def setnumberkinetics(self, numkin):
+    @staticmethod
+    def setnumberkinetics(numkin):
         """
         :param numkin:
         :return error message(string):
@@ -90,7 +98,8 @@ class Cam:
         error = dll.SetNumberKinetics(numkin)
         return ERROR_CODE[error]
 
-    def setnumberaccumulations(self, number):
+    @staticmethod
+    def setnumberaccumulations(number):
         """
         :param number:
         :return error message(string):
@@ -102,7 +111,8 @@ class Cam:
         error = dll.SetNumberKinetics(number)
         return ERROR_CODE[error]
 
-    def setaccumulationcycletime(self, time):
+    @staticmethod
+    def setaccumulationcycletime(time):
         """
         :param time:
         :return error message(string):
@@ -114,7 +124,8 @@ class Cam:
         error = dll.SetAccumulationCycleTime(ctypes.c_float(time))
         return ERROR_CODE[error]
 
-    def setkineticcycletime(self, time):
+    @staticmethod
+    def setkineticcycletime(time):
         """
         :param time:
         :return error message(string):
@@ -126,7 +137,8 @@ class Cam:
         error = dll.SetKineticCycleTime(ctypes.c_float(time))
         return ERROR_CODE[error]
 
-    def setshutter(self, typeshut, mode, closingtime, openingtime):
+    @staticmethod
+    def setshutter(typeshut, mode, closingtime, openingtime):
         """
         :param typeshut:
         :param mode:
@@ -156,7 +168,8 @@ class Cam:
         error = dll.SetShutter(typeshut, mode, closingtime, openingtime)
         return ERROR_CODE[error]
 
-    def startacquisition(self):
+    @staticmethod
+    def startacquisition():
         """
         :return error message(string):
 
@@ -178,7 +191,6 @@ class Cam:
         # self.imagearray = None
 
         # cimage = (ctypes.c_int * self.dim)()
-
         error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim)
 
         self.imagearray = np.asarray(cimage[:])
@@ -198,7 +210,8 @@ class Cam:
         self.imagearray = np.asarray(cimage[:])
         return ERROR_CODE[error]
 
-    def setframetransfermode(self, mode):
+    @staticmethod
+    def setframetransfermode(mode):
         """
         This function will set whether an acquisition will readout in Frame Transfer Mode.
         If the acquisition mode is Single Scan or Fast Kinetics this call will have no affect.
@@ -207,7 +220,8 @@ class Cam:
 
         return ERROR_CODE[error]
 
-    def setexposuretime(self, time):
+    @staticmethod
+    def setexposuretime(time):
         """
         :param time:
         :return error message(string):
@@ -219,7 +233,8 @@ class Cam:
         error = dll.SetExposureTime(ctypes.c_float(time))
         return ERROR_CODE[error]
 
-    def getnumberadchannels(self):
+    @staticmethod
+    def getnumberadchannels():
         """
         :return:
 
@@ -231,7 +246,8 @@ class Cam:
         error = dll.GetNumberADChannels(nochannels)
         return ERROR_CODE[error]
 
-    def setadchannel(self, channel):
+    @staticmethod
+    def setadchannel(channel):
         """
         :param channel:
         :return error message(string):
@@ -243,7 +259,8 @@ class Cam:
         error = dll.SetADChannel(channel)
         return ERROR_CODE[error]
 
-    def getbitdepth(self, channel):
+    @staticmethod
+    def getbitdepth(channel):
         """
         :param channel:
         :return error message(string):
@@ -256,7 +273,8 @@ class Cam:
         error = dll.GetBitDepth(channel, ctypes.byref(bitdepth))
         return ERROR_CODE[error]
 
-    def getnumberhsspeeds(self, channel, typehss):
+    @staticmethod
+    def getnumberhsspeeds(channel, typehss):
         """
         :param: channel, typehss
         :return: error message (string)
@@ -277,7 +295,8 @@ class Cam:
         error = dll.GetNumberHSSpeeds(channel, typehss, ctypes.byref(numberhss))
         return ERROR_CODE[error]
 
-    def gethsspeed(self, channel, typehss, index):
+    @staticmethod
+    def gethsspeed(channel, typehss, index):
         """
         :param channel:
         :param typehss:
@@ -303,7 +322,8 @@ class Cam:
         error = dll.GetHSSpeed(channel, typehss, index, ctypes.byref(hsspeed))
         return ERROR_CODE[error]
 
-    def sethsspeed(self, typehss, index):
+    @staticmethod
+    def sethsspeed(typehss, index):
         """
         :param typehss:
         :param index:
@@ -324,7 +344,8 @@ class Cam:
         error = dll.SetHSSpeed(typehss, index)
         return ERROR_CODE[error]
 
-    def getnumbervsspeeds(self):
+    @staticmethod
+    def getnumbervsspeeds():
         """
         :return error message(string):
 
@@ -336,7 +357,8 @@ class Cam:
         error = dll.GetNumberVSSpeeds(ctypes.byref(novsspeeds))
         return ERROR_CODE[error]
 
-    def getvsspeed(self, index):
+    @staticmethod
+    def getvsspeed(index):
         """
         :param index:
         :return error message(string):
@@ -350,7 +372,8 @@ class Cam:
         error = dll.GetVSSpeed(index, ctypes.byref(vsspeed))
         return ERROR_CODE[error]
 
-    def setvsspeed(self, index):
+    @staticmethod
+    def setvsspeed(index):
         """
         :param index:
         :return error message(string):
@@ -430,7 +453,8 @@ class Cam:
         self.randomtracks = numtracks
         return ERROR_CODE[error]
 
-    def settriggermode(self, mode):
+    @staticmethod
+    def settriggermode(mode):
         """
         :param mode:
         :return error message(string):
@@ -467,7 +491,8 @@ class Cam:
         self.kinetic = kinetic.value
         return ERROR_CODE[error]
 
-    def setbaselineclamp(self, state):
+    @staticmethod
+    def setbaselineclamp(state):
         """
         :param state:
         :return error message(string):
@@ -483,7 +508,8 @@ class Cam:
         error = dll.SetBaselineClamp(state)
         return ERROR_CODE[error]
 
-    def freeinternalmemory(self):
+    @staticmethod
+    def freeinternalmemory():
         """
         :return error message(string):
 
@@ -494,7 +520,8 @@ class Cam:
         error = dll.FreeInternalMemory()
         return ERROR_CODE[error]
 
-    def waitforacquisition(self):
+    @staticmethod
+    def waitforacquisition():
         error = dll.WaitForAcquisition()
         return ERROR_CODE[error]
 
