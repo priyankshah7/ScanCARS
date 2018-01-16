@@ -9,6 +9,8 @@ e.g. deactivate all buttons apart from the main Shutdown pushbutton:
     deactivate_buttons(self, main_shutdown_stat=True)
 """
 
+# (TODO) Set stylefiles to change here when activating/deactivating buttons
+
 
 def deactivate_buttons(self, main_start_acq_stat=False, main_shutdown_stat=False, cameratemp_cooler_stat=False,
                        spectrawin_sum_stat=False, spectrawin_single_stat=False, grating_update_stat=False,

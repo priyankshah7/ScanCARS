@@ -3,13 +3,13 @@ import time
 import ctypes
 import numpy as np
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 
 from scancars.gui import dialogs
 from scancars.gui.forms import main
 from scancars.gui.css import setstyle
 from scancars.threads import uithreads
-from scancars.utils import post, toggle
+from scancars.utils import post, toggle, savetofile
 from scancars.sdk.andor import pyandor
 
 
@@ -176,17 +176,22 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.setshutter(1, 2, 0, 0)
 
     def main_shutdown(self):
+        # Ensuring all acquiring and temperature loops have been stopped
         self.acquiring = False
         self.gettingtemp = False
 
+        # Turning the shutter off and checking to see if the camera cooler is on
         self.andor.setshutter(1, 2, 0, 0)
         self.andor.iscooleron()
+
+        # If the cooler is off, proceed to shutdown the camera
         if self.andor.coolerstatus == 0:
             self.andor.shutdown()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
 
+        # If the cooler is on, turn it off, wait for temp. to increase to -20C, and then shutdown camera
         elif self.andor.coolerstatus == 1:
             self.andor.gettemperature()
             if self.andor.temperature < -20:
@@ -265,16 +270,75 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # SpectralAcq: defining functions
     def spectralacq_updatetime(self):
-        # Storing the acquisition time
+        # Storing and setting the acquisition time
         self.exposuretime = float(self.SpectralAcq_time_req.text())
         self.andor.setexposuretime(self.exposuretime)
+
+        # Updating the actual acquisition time that has been set
         self.andor.getacquisitiontimings()
         self.SpectralAcq_actual_time.setText(str(round(self.andor.exposure, 3)))
         post.eventlog(self, 'Andor: Exposure time set to ' + str(self.exposuretime) + 's')
 
     def spectralacq_start(self):
-        spectralacqstart = uithreads.SpectralThread(self)
-        self.threadpool.start(spectralacqstart)
+        toggle.deactivate_buttons(self)
+        self.spectralacquiring = True
+        post.status(self, 'Spectral acquisition in progress...')
+        self.Main_progress.setValue(0)
+
+        exposuretime = float(self.SpectralAcq_time_req.text())
+        # frames = int(self.SpectralAcq_frames.text())
+        # darkcount = int(self.SpectralAcq_darkfield.text())
+
+        frames = 20
+        darkcount = 0
+
+        # Expected time
+        total = (darkcount * self.darkexposure) + (frames * exposuretime)
+        # progress_darkcount = ((darkcount * self.ui.darkexposure) / total) * 100
+
+        # Spectral acquisitions
+        self.andor.setshutter(1, 1, 0, 0)
+        self.andor.setexposuretime(exposuretime)
+        self.andor.setnumberkinetics(frames)
+        self.andor.setacquisitionmode(3)
+
+        time.sleep(2)
+
+        self.andor.startacquisition()
+        self.andor.getstatus()
+        while self.andor.getstatusval == 'DRV_ACQUIRING':
+            time.sleep(exposuretime/10)
+            self.andor.getstatus()
+
+        cimage = (ctypes.c_long * frames * self.andor.dim)()
+        self.andor.getacquireddata(cimage, frames)
+        spectral_data = self.andor.imagearray
+
+        self.Main_specwin.clear()
+        self.Main_specwin.plot(spectral_data[0:511, 5], pen='r')
+        self.Main_specwin.plot(spectral_data[512:1023, 5], pen='g')
+        self.Main_specwin.plot(spectral_data[512:1023, 5] - spectral_data[0:511, 5], pen='w')
+
+        filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
+                                               directory='C:\\Users\\CARS\\Documents\\LabVIEW Data\\CARS data files\\priyank\\new software')
+
+        if filename[0]:
+            acqproperties = savetofile.EmptyClass()
+            acqproperties.width = self.andor.width
+            acqproperties.time = exposuretime
+            acqproperties.number = frames
+
+            savetofile.save(spectral_data, str(filename[0]), acqproperties, acqtype='spectral')
+
+            post.eventlog(self, 'Spectral acquisition saved.')  # TODO Print file name saved to as well
+
+        else:
+            post.eventlog(self, 'Acquisition aborted.')
+
+        post.status(self, '')
+        self.spectralacquiring = False
+        self.Main_progress.setValue(100)
+        toggle.activate_buttons(self)
 
 
     # HyperAcq: defining functions
