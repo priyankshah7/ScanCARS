@@ -179,7 +179,7 @@ class Cam:
         error = dll.StartAcquisition()
         return ERROR_CODE[error]
 
-    def getacquireddata(self, cimage):
+    def getacquireddata(self, cimage, numscans=1):
         """
         This function will return the data from the last acquisition. The data
         are returned as long integers (32bit signed integers). The array must
@@ -189,21 +189,6 @@ class Cam:
         # TODO move the kinetic version here and add a numscans method input
         # TODO Move the cimagearray to the uithread (shouldn't be called for every update)
         # self.imagearray = None
-
-        # cimage = (ctypes.c_int * self.dim)()
-        error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim)
-
-        self.imagearray = np.asarray(cimage[:])
-        return ERROR_CODE[error]
-
-    def getacquireddata_kinetic(self, numscans):
-        """
-        This function will return the data from the last acquisition. The data
-        are returned as long integers (32bit signed integers). The array must
-        be large enough
-        """
-        self.imagearray = None
-        cimage = (ctypes.c_int * numscans * self.dim)()
 
         error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim*numscans)
 
