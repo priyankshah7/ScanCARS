@@ -51,6 +51,10 @@ class TemperatureThread(QtCore.QRunnable):
             time.sleep(4)
 
 
+class ShutDown(QtCore.QRunnable):
+    pass
+
+
 class AcquireThread(QtCore.QRunnable):
     def __init__(self, ui):
         super(AcquireThread, self).__init__()
