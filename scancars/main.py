@@ -36,10 +36,11 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # Storing exposure times
         self.exposuretime = float(self.SpectralAcq_time_req.text())
         self.darkexposure = 0.1
+        self.SpectralAcq_darkfield.setText(str(30))
 
         # Plot settings
         # self.Main_specwin.plotItem.addLegend()
-        self.Main_specwin.plotItem.showGrid(x=True, y=True)
+        self.Main_specwin.plotItem.showGrid(x=True, y=True, alpha=0.1)
         self.Main_specwin.setXRange(-10, 520, padding=0)
         # self.Main_specwin.setYRange(-65000, 65000, padding=0)
         # self.Main_specwin.plotItem.
@@ -183,16 +184,17 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # Turning the shutter off and checking to see if the camera cooler is on
         self.andor.setshutter(1, 2, 0, 0)
         self.andor.iscooleron()
+        self.andor.gettemperature()
 
         # If the cooler is off, proceed to shutdown the camera
-        if self.andor.coolerstatus == 0:
+        if self.andor.coolerstatus == 0 and self.andor.temperature > -20:
             self.andor.shutdown()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
 
         # If the cooler is on, turn it off, wait for temp. to increase to -20C, and then shutdown camera
-        elif self.andor.coolerstatus == 1:
+        else:
             self.andor.gettemperature()
             if self.andor.temperature < -20:
                 post.eventlog(self, 'Andor: Waiting for camera to return to normal temp...')
@@ -203,6 +205,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             while self.andor.temperature < -20:
                 time.sleep(3)
                 self.andor.gettemperature()
+                QtCore.QCoreApplication.processEvents()
 
             self.andor.shutdown()
 
@@ -287,30 +290,33 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         exposuretime = float(self.SpectralAcq_time_req.text())
         frames = int(self.SpectralAcq_frames.text())
-        # darkcount = int(self.SpectralAcq_darkfield.text())
-        darkcount = 0
+        darkcount = int(self.SpectralAcq_darkfield.text())
 
         # Expected time
         total = (darkcount * self.darkexposure) + (frames * exposuretime)
         # progress_darkcount = ((darkcount * self.ui.darkexposure) / total) * 100
 
-        # Spectral acquisitions
-        # self.andor.setshutter(1, 1, 0, 0)
-        # self.andor.setexposuretime(exposuretime)
-        # self.andor.setnumberkinetics(frames)
-        # self.andor.setacquisitionmode(3)
-        #
-        # time.sleep(2)
-        #
-        # self.andor.startacquisition()
-        # self.andor.getstatus()
-        # while self.andor.getstatusval == 'DRV_ACQUIRING':
-        #     time.sleep(exposuretime/10)
-        #     self.andor.getstatus()
-        #
-        # cimage = (ctypes.c_long * frames * self.andor.dim)()
-        # self.andor.getacquireddata(cimage, frames)
-        # spectral_data = self.andor.imagearray
+        # Darkcount acquisition
+        self.andor.setshutter(1, 1, 0, 0)
+        self.andor.setexposuretime(exposuretime)
+        self.andor.setacquisitionmode(1)
+        cimage = (ctypes.c_long * self.andor.dim)()
+
+        time.sleep(2)
+        dark_data = [0] * darkcount
+
+        numscan = 0
+        while numscan < darkcount:
+            self.andor.startacquisition()
+            self.andor.waitforacquisition()
+            self.andor.getacquireddata(cimage, 1)
+            dark_data[numscan] = self.andor.imagearray
+
+            self.Main_progress.setValue((numscan + 1) / (darkcount+frames) * 100)
+            numscan += 1
+
+        dark_data = np.asarray(dark_data)
+        dark_data = np.transpose(dark_data)
 
         # Converting the acquisition from using Kinetic series to Single scan
         self.andor.setshutter(1, 1, 0, 0)
@@ -328,17 +334,19 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.getacquireddata(cimage, 1)
             spectral_data[numscan] = self.andor.imagearray
 
-            self.Main_progress.setValue((numscan+1)/frames * 100)
+            self.Main_progress.setValue((darkcount+numscan+1)/(darkcount+frames) * 100)
             numscan += 1
 
         spectral_data = np.asarray(spectral_data)
         spectral_data = np.transpose(spectral_data)
 
+        acquired_data = np.mean(spectral_data, 1) - np.mean(dark_data, 1)
+
         # # Plotting the mean spectrum
         self.Main_specwin.clear()
-        self.Main_specwin.plot(np.mean(spectral_data[0:511, :], 1), pen='r')
-        self.Main_specwin.plot(np.mean(spectral_data[512:1023, :], 1), pen='g')
-        self.Main_specwin.plot(np.mean(spectral_data[512:1023, :] - spectral_data[0:511, :], 1), pen='w')
+        self.Main_specwin.plot(acquired_data[0:511], pen='r')
+        self.Main_specwin.plot(acquired_data[512:1023], pen='g')
+        self.Main_specwin.plot(acquired_data[512:1023] - acquired_data[0:511], pen='w')
 
         # # Saving the data to file
         filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
@@ -350,7 +358,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             acqproperties.time = exposuretime
             acqproperties.number = frames
 
-            savetofile.save(spectral_data, str(filename[0]), acqproperties, acqtype='spectral')
+            savetofile.save(acquired_data, str(filename[0]), acqproperties, acqtype='spectral')
 
             post.eventlog(self, 'Spectral acquisition saved.')  # TODO Print file name saved to as well
 

@@ -193,6 +193,7 @@ class Cam:
         error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim*numscans)
 
         self.imagearray = np.asarray(cimage[:])
+        self.imagearray = self.imagearray[::-1]
         return ERROR_CODE[error]
 
     @staticmethod
