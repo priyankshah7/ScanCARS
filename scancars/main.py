@@ -286,10 +286,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.Main_progress.setValue(0)
 
         exposuretime = float(self.SpectralAcq_time_req.text())
-        # frames = int(self.SpectralAcq_frames.text())
+        frames = int(self.SpectralAcq_frames.text())
         # darkcount = int(self.SpectralAcq_darkfield.text())
-
-        frames = 20
         darkcount = 0
 
         # Expected time
@@ -297,28 +295,52 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # progress_darkcount = ((darkcount * self.ui.darkexposure) / total) * 100
 
         # Spectral acquisitions
+        # self.andor.setshutter(1, 1, 0, 0)
+        # self.andor.setexposuretime(exposuretime)
+        # self.andor.setnumberkinetics(frames)
+        # self.andor.setacquisitionmode(3)
+        #
+        # time.sleep(2)
+        #
+        # self.andor.startacquisition()
+        # self.andor.getstatus()
+        # while self.andor.getstatusval == 'DRV_ACQUIRING':
+        #     time.sleep(exposuretime/10)
+        #     self.andor.getstatus()
+        #
+        # cimage = (ctypes.c_long * frames * self.andor.dim)()
+        # self.andor.getacquireddata(cimage, frames)
+        # spectral_data = self.andor.imagearray
+
+        # Converting the acquisition from using Kinetic series to Single scan
         self.andor.setshutter(1, 1, 0, 0)
         self.andor.setexposuretime(exposuretime)
-        self.andor.setnumberkinetics(frames)
-        self.andor.setacquisitionmode(3)
+        self.andor.setacquisitionmode(1)
+        cimage = (ctypes.c_long * self.andor.dim)()
 
         time.sleep(2)
+        spectral_data = [0]*frames
 
-        self.andor.startacquisition()
-        self.andor.getstatus()
-        while self.andor.getstatusval == 'DRV_ACQUIRING':
-            time.sleep(exposuretime/10)
-            self.andor.getstatus()
+        numscan = 0
+        while numscan < frames:
+            self.andor.startacquisition()
+            self.andor.waitforacquisition()
+            self.andor.getacquireddata(cimage, 1)
+            spectral_data[numscan] = self.andor.imagearray
 
-        cimage = (ctypes.c_long * frames * self.andor.dim)()
-        self.andor.getacquireddata(cimage, frames)
-        spectral_data = self.andor.imagearray
+            self.Main_progress.setValue((numscan+1)/frames * 100)
+            numscan += 1
 
+        spectral_data = np.asarray(spectral_data)
+        spectral_data = np.transpose(spectral_data)
+
+        # # Plotting the mean spectrum
         self.Main_specwin.clear()
-        self.Main_specwin.plot(spectral_data[0:511, 5], pen='r')
-        self.Main_specwin.plot(spectral_data[512:1023, 5], pen='g')
-        self.Main_specwin.plot(spectral_data[512:1023, 5] - spectral_data[0:511, 5], pen='w')
+        self.Main_specwin.plot(np.mean(spectral_data[0:511, :], 1), pen='r')
+        self.Main_specwin.plot(np.mean(spectral_data[512:1023, :], 1), pen='g')
+        self.Main_specwin.plot(np.mean(spectral_data[512:1023, :] - spectral_data[0:511, :], 1), pen='w')
 
+        # # Saving the data to file
         filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
                                                directory='C:\\Users\\CARS\\Documents\\LabVIEW Data\\CARS data files\\priyank\\new software')
 
@@ -335,6 +357,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         else:
             post.eventlog(self, 'Acquisition aborted.')
 
+        # Finishing up UI acquisition call
+        self.andor.setshutter(1, 2, 0, 0)
         post.status(self, '')
         self.spectralacquiring = False
         self.Main_progress.setValue(100)
