@@ -3,7 +3,9 @@ import time
 import ctypes
 import numpy as np
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PyQt5.QtCore import Qt
+from PyQt5.Qt import QPalette, QColor
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactory
 
 from scancars.gui import dialogs
 from scancars.gui.forms import main
@@ -20,33 +22,36 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO If speed becomes an issue, consider using numba package with jit decorator
-            # Required to use maths functions instead of numpy
+        # Required to use maths functions instead of numpy
 
-        # ------------------------------------------------------------------------------------------------------------
-        # Importing relevant methods and classes
+        # -------STARTUP PROCESSES ---------------------------------------------------------
+
+        # Initiating instances of a threadpool and the Andor class
         self.threadpool = QtCore.QThreadPool()
         self.andor = pyandor.Cam()
 
-        # Creating acquisition and CCD temperature loop conditions
+        # Variables for acquisition and temp. monitoring loops
         self.acquiring = False
         self.spectralacquiring = False
         self.hyperacquiring = False
         self.gettingtemp = False
 
         # Storing exposure times
-        self.exposuretime = float(self.SpectralAcq_time_req.text())
+        self.exposuretime = float(self.spectralRequiredTime.text())
         self.darkexposure = 0.1
-        self.SpectralAcq_darkfield.setText(str(30))
 
-        # Plot settings
-        # self.Main_specwin.plotItem.addLegend()
-        self.Main_specwin.plotItem.showGrid(x=True, y=True, alpha=0.1)
-        self.Main_specwin.setXRange(-10, 520, padding=0)
-        # self.Main_specwin.setYRange(-65000, 65000, padding=0)
-        # self.Main_specwin.plotItem.
+        # Plot/Image settings
+        self.specwinMain.plotItem.showGrid(x=True, y=True, alpha=0.1)
+        self.specwinPrevious.plotItem.showGrid(x=True, y=True, alpha=0.1)
+        self.specwinMain.setXRange(-10, 520, padding=0)
+        self.specwinPrevious.setXRange(-10, 520, padding=0)
+        self.specwinMain.plotItem.setMenuEnabled(False)
+        self.specwinPrevious.plotItem.setMenuEnabled(False)
 
-        # Setting the css-style file
-        setstyle.main(self)
+        self.imagewinMain.ui.histogram.setMinimumWidth(10)
+        self.imagewinMain.ui.histogram.vb.setMinimumWidth(5)
+        self.imagewinMain.ui.roiBtn.hide()
+        self.imagewinMain.ui.menuBtn.hide()
 
         # Creating variables to store instances of the camera and track/sum dialogs
         self.wincamera = None
@@ -54,55 +59,50 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.winspecsum = None
 
         # Connecting buttons to methods
-        self.Main_start_acq.clicked.connect(lambda: self.main_startacq())
-        self.Main_shutdown.clicked.connect(lambda: self.main_shutdown())
-        self.CameraTemp_cooler_on.clicked.connect(lambda: self.cameratemp_cooler())
-        self.SpectraWin_single_track.clicked.connect(lambda: self.spectrawin_tracks())
-        self.SpectraWin_sum_track.clicked.connect(lambda: self.spectrawin_sum())
-        self.Grating_update.clicked.connect(lambda: self.grating_update())
-        self.CameraOptions_update.clicked.connect(lambda: self.cameraoptions_update())
-        self.CameraOptions_openimage.clicked.connect(lambda: self.cameraoptions_openimage())
-        self.SpectralAcq_update_time.clicked.connect(lambda: self.spectralacq_updatetime())
-        self.SpectralAcq_start.clicked.connect(lambda: self.spectralacq_start())
-        self.HyperAcq_start.clicked.connect(lambda: self.hyperacq_start())
+        self.buttonMainStartAcquisition.clicked.connect(lambda: self.main_startacq())
+        self.buttonMainShutdown.clicked.connect(lambda: self.main_shutdown())
+        self.buttonCameratempCooler.clicked.connect(lambda: self.cameratemp_cooler())
+        self.buttonDialogsDifference.clicked.connect(lambda: self.dialog_diff())
+        self.buttonDialogsSum.clicked.connect(lambda: self.dialog_sum())
+        self.buttonGratingUpdate.clicked.connect(lambda: self.grating_update())
+        self.buttonCamtrackUpdate.clicked.connect(lambda: self.camtracks_update())
+        self.buttonCamtrackView.clicked.connect(lambda: self.camtracks_view())
+        self.buttonSpectralUpdate.clicked.connect(lambda: self.spectralacq_update())
+        self.buttonSpectralStart.clicked.connect(lambda: self.spectralacq_start())
+        self.buttonHyperspectralStart.clicked.connect(lambda: self.hyperacq_start())
 
-        # ------------------------------------------------------------------------------------------------------------
-
-        # ------------------------------------------------------------------------------------------------------------
-        # Startup Processes
-        post.event_date(self)
-
-        # Initializing the camera
+        # Initialising the camera
         self.initialize_andor()
         self.width = self.andor.width
-        # ------------------------------------------------------------------------------------------------------------
+
+        # Misc
+        self.progressbar.setValue(0)
 
     def __del__(self):
-        post.eventlog(self, 'An error has occurred. This program will exit after the Andor camera has shut down.')
-        self.main_shutdown()
+        pass
 
-    # Initialize: defining functions
+    # Initialize: defining methods
     def initialize_andor(self):
         toggle.deactivate_buttons(self)
 
         # Storing the positions of the random tracks in an array
-        randtrack = np.array([int(self.CameraOptions_track1lower.text()),
-                              int(self.CameraOptions_track1upper.text()),
-                              int(self.CameraOptions_track2lower.text()),
-                              int(self.CameraOptions_track2upper.text())])
+        randtrack = np.array([int(float(self.camtrackLower1.text())),
+                              int(float(self.camtrackUpper1.text())),
+                              int(float(self.camtrackLower2.text())),
+                              int(float(self.camtrackUpper2.text()))])
 
-        errorinitialize = self.andor.initialize()       # Initializing the detector
+        errorinitialize = self.andor.initialize()   # Initializing the detector
         if errorinitialize != 'DRV_SUCCESS':
             post.eventlog(self, 'Andor: Initialize error. ' + errorinitialize)
             return
-        self.andor.getdetector()                        # Getting information from the detector
-        self.andor.setshutter(1, 2, 0, 0)               # Ensuring the shutter is closed
-        self.andor.setreadmode(2)                       # Setting the read mode to Random Tracks
-        self.andor.setrandomtracks(2, randtrack)        # Setting the position of the random tracks
-        self.andor.setadchannel(1)                      # Setting the AD channel
-        self.andor.settriggermode(0)                    # Setting the trigger mode to 'internal'
-        self.andor.sethsspeed(1, 0)                     # Setting the horiz. shift speed
-        self.andor.setvsspeed(4)                        # Setting the verti. shift speed
+        self.andor.getdetector()                    # Getting information from the detector
+        self.andor.setshutter(1, 2, 0, 0)           # Ensuring the shutter is closed
+        self.andor.setreadmode(2)                   # Setting the read mode to Random Tracks
+        self.andor.setrandomtracks(2, randtrack)    # Setting the position of the random tracks
+        self.andor.setadchannel(1)                  # Setting the AD channel
+        self.andor.settriggermode(0)                # Setting the trigger mode to 'internal'
+        self.andor.sethsspeed(1, 0)                 # Setting the horiz. shift speed
+        self.andor.setvsspeed(4)                    # Setting the verti. shift speed
 
         time.sleep(2)
 
@@ -116,34 +116,18 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         gettemperature = uithreads.TemperatureThread(self)
         self.threadpool.start(gettemperature)
 
-    # Main: defining functions
+    # Main: defining methods
     def main_startacq(self):
-        # startacq = uithreads.AcquireThread(self)
-        # if self.acquiring is False:
-        #     self.acquiring = True
-        #     self.threadpool.start(startacq)
-        #
-        # elif self.acquiring is True:
-        #     self.acquiring = False
-        #     toggle.activate_buttons(self)
-        #     post.status(self, '')
-        #     self.andor.setshutter(1, 2, 0, 0)
-        #     self.Main_start_acq.setText('Start Acquisition')
-
-        # NOTE The acquiring thread has been moved here (no thread)
-        # This has solved the plot hanging after a certain number of plots
-        # This needs to be moved into a multiprocessing process though
-
         if self.acquiring is False:
             self.acquiring = True
             toggle.deactivate_buttons(self, main_start_acq_stat=True)
             post.status(self, 'Acquiring...')
-            self.Main_start_acq.setText('Stop Acquisition')
+            self.buttonMainStartAcquisition.setText('Stop Acquisition')
 
-            self.Main_specwin.clear()
-            track1plot = self.Main_specwin.plot(pen='r', name='track1')
-            track2plot = self.Main_specwin.plot(pen='g', name='track2')
-            diffplot = self.Main_specwin.plot(pen='w', name='trackdiff')
+            self.specwinMain.clear()
+            track1plot = self.specwinMain.plot(pen='r', name='track1')
+            track2plot = self.specwinMain.plot(pen='g', name='track2')
+            diffplot = self.specwinMain.plot(pen='w', name='trackdiff')
 
             cimage = (ctypes.c_int * self.andor.dim)()
 
@@ -151,10 +135,6 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.setacquisitionmode(1)
             self.andor.setshutter(1, 1, 0, 0)
             self.andor.setexposuretime(self.exposuretime)
-
-            # istracksvisisble = dialogs.SPECTRACKS.isVisible()
-            # if istracksvisisble:
-            #     print('true')
 
             while self.acquiring:
                 self.andor.startacquisition()
@@ -173,7 +153,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.acquiring = False
             toggle.activate_buttons(self)
             post.status(self, '')
-            self.Main_start_acq.setText('Start Acquisition')
+            self.buttonMainStartAcquisition.setText('Start Acquisition')
             self.andor.setshutter(1, 2, 0, 0)
 
     def main_shutdown(self):
@@ -199,8 +179,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             if self.andor.temperature < -20:
                 post.eventlog(self, 'Andor: Waiting for camera to return to normal temp...')
             self.andor.cooleroff()
-            self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
-            self.CameraTemp_cooler_on.setText('Cooler On')
+            self.buttonCameratempCooler.setText('Cooler On')
             time.sleep(1)
             while self.andor.temperature < -20:
                 time.sleep(3)
@@ -212,7 +191,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
 
-    # CameraTemp: defining functions
+    # CameraTemp: defining methods
     def cameratemp_cooler(self):
         # Checking to see if the cooler is on or off
         messageIsCoolerOn = self.andor.iscooleron()
@@ -222,13 +201,12 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         else:
             if self.andor.coolerstatus == 0:
                 # Turning the cooler on and checking to see if it has been turned on
-                self.andor.settemperature(int(self.CameraTemp_temp_req.text()))
+                self.andor.settemperature(int(self.cameratempRequiredTemp.text()))
                 self.andor.cooleron()
                 self.andor.iscooleron()
                 if self.andor.coolerstatus == 1:
                     post.eventlog(self, 'Andor: Cooler on.')
-                    self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #323e30}")
-                    self.CameraTemp_cooler_on.setText('Cooler Off')
+                    self.buttonCameratempCooler.setText('Cooler Off')
 
             elif self.andor.coolerstatus == 1:
                 # Turning the cooler off and checking to see if it has been turned off
@@ -236,68 +214,57 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
                 self.andor.iscooleron()
                 if self.andor.coolerstatus == 0:
                     post.eventlog(self, 'Andor: Cooler off.')
-                    self.CameraTemp_temp_actual.setStyleSheet("QLineEdit {background: #191919}")
-                    self.CameraTemp_cooler_on.setText('Cooler On')
+                    self.buttonCameratempCooler.setText('Cooler On')
 
             else:
                 # Shouldn't expect this to be called, if it is then it's unlikely to be related to the Andor
                 post.eventlog(self, 'An error has occured. Possibly related to the GUI itself?')
 
-    # SpectraWin: defining functions
-    def spectrawin_tracks(self):
-        self.winspectracks = dialogs.SPECTRACKS()
-        self.winspectracks.setWindowTitle('Individual Tracks Spectra')
-        self.winspectracks.show()
+    # Dialogs: defining methods
+    def dialog_sum(self):
+        pass
 
-    def spectrawin_sum(self):
-        self.winspecsum = dialogs.SPECSUM()
-        self.winspecsum.setWindowTitle('Sum Track Spectrum')
-        self.winspecsum.show()
+    def dialog_diff(self):
+        pass
 
-    # Grating: defining functions
+    # Grating: defining methods
     def grating_update(self):
         pass
 
-    # CameraOptions: defining functions
-    def cameraoptions_update(self):
+    # CamTracks: Defining methods
+    def camtracks_update(self):
         pass
 
-    def cameraoptions_openimage(self):
-        # openimage = CameraOptions.OpenImage(self)
-        # self.threadpool.start(openimage)
-        self.wincamera = dialogs.CAMERA()
-        self.wincamera.setWindowTitle('Live CCD Video')
-        self.wincamera.show()
-
+    def camtracks_view(self):
         pass
 
-    # SpectralAcq: defining functions
-    def spectralacq_updatetime(self):
+    # SpectralAcq: Defining methods
+    def spectralacq_update(self):
         # Storing and setting the acquisition time
-        self.exposuretime = float(self.SpectralAcq_time_req.text())
+        self.exposuretime = float(self.spectralRequiredTime.text())
         self.andor.setexposuretime(self.exposuretime)
 
         # Updating the actual acquisition time that has been set
         self.andor.getacquisitiontimings()
-        self.SpectralAcq_actual_time.setText(str(round(self.andor.exposure, 3)))
+        self.spectralActualTime.setText(str(round(self.andor.exposure, 3)))
         post.eventlog(self, 'Andor: Exposure time set to ' + str(self.exposuretime) + 's')
 
     def spectralacq_start(self):
         toggle.deactivate_buttons(self)
         self.spectralacquiring = True
         post.status(self, 'Spectral acquisition in progress...')
-        self.Main_progress.setValue(0)
+        self.progressbar.setValue(0)
 
-        exposuretime = float(self.SpectralAcq_time_req.text())
-        frames = int(self.SpectralAcq_frames.text())
-        darkcount = int(self.SpectralAcq_darkfield.text())
+        exposuretime = float(self.exposuretime)
+        frames = int(self.spectralFrames.text())
+        darkcount = int(self.spectralBackgroundFrames.text())
 
         # Expected time
         total = (darkcount * self.darkexposure) + (frames * exposuretime)
         # progress_darkcount = ((darkcount * self.ui.darkexposure) / total) * 100
 
         # Darkcount acquisition
-        self.andor.setshutter(1, 1, 0, 0)
+        self.andor.setshutter(1, 2, 0, 0)
         self.andor.setexposuretime(exposuretime)
         self.andor.setacquisitionmode(1)
         cimage = (ctypes.c_long * self.andor.dim)()
@@ -312,7 +279,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.getacquireddata(cimage, 1)
             dark_data[numscan] = self.andor.imagearray
 
-            self.Main_progress.setValue((numscan + 1) / (darkcount+frames) * 100)
+            self.progressbar.setValue((numscan + 1) / (darkcount + frames) * 100)
             numscan += 1
 
         dark_data = np.asarray(dark_data)
@@ -325,7 +292,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         cimage = (ctypes.c_long * self.andor.dim)()
 
         time.sleep(2)
-        spectral_data = [0]*frames
+        spectral_data = [0] * frames
 
         numscan = 0
         while numscan < frames:
@@ -334,7 +301,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.getacquireddata(cimage, 1)
             spectral_data[numscan] = self.andor.imagearray
 
-            self.Main_progress.setValue((darkcount+numscan+1)/(darkcount+frames) * 100)
+            self.progressbar.setValue((darkcount + numscan + 1) / (darkcount + frames) * 100)
             numscan += 1
 
         spectral_data = np.asarray(spectral_data)
@@ -343,10 +310,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         acquired_data = np.mean(spectral_data, 1) - np.mean(dark_data, 1)
 
         # # Plotting the mean spectrum
-        self.Main_specwin.clear()
-        self.Main_specwin.plot(acquired_data[0:511], pen='r')
-        self.Main_specwin.plot(acquired_data[512:1023], pen='g')
-        self.Main_specwin.plot(acquired_data[512:1023] - acquired_data[0:511], pen='w')
+        self.specwinMain.clear()
+        self.specwinMain.plot(acquired_data[0:511], pen='r')
+        self.specwinMain.plot(acquired_data[512:1023], pen='g')
+        self.specwinMain.plot(acquired_data[512:1023] - acquired_data[0:511], pen='w')
 
         # # Saving the data to file
         filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
@@ -369,17 +336,35 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.andor.setshutter(1, 2, 0, 0)
         post.status(self, '')
         self.spectralacquiring = False
-        self.Main_progress.setValue(100)
+        self.progressbar.setValue(100)
         toggle.activate_buttons(self)
 
-
-    # HyperAcq: defining functions
     def hyperacq_start(self):
         pass
 
 
 def main():
     app = QApplication(sys.argv)
+
+    # Setting the dark-themed Fusion style for the GUI
+    app.setStyle(QStyleFactory.create('Fusion'))
+    dark_palette = QPalette()
+    dark_palette.setColor(QPalette.Window, QColor(23, 23, 23))
+    dark_palette.setColor(QPalette.WindowText, Qt.white)
+    dark_palette.setColor(QPalette.Base, QColor(18, 18, 18))
+    dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ToolTipBase, Qt.white)
+    dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+    dark_palette.setColor(QPalette.Text, Qt.white)
+    dark_palette.setColor(QPalette.Button, QColor(33, 33, 33))
+    dark_palette.setColor(QPalette.ButtonText, Qt.white)
+    dark_palette.setColor(QPalette.BrightText, Qt.red)
+    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.HighlightedText, Qt.white)
+    app.setPalette(dark_palette)
+    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
+
     form = ScanCARS()
     form.setWindowTitle('ScanCARS')
     form.show()
