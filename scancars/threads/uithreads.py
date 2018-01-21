@@ -47,12 +47,25 @@ class TemperatureThread(QtCore.QRunnable):
     def run(self):
         while self.ui.gettingtemp:
             self.ui.andor.gettemperature()
-            self.ui.CameraTemp_temp_actual.setText(str(self.ui.andor.temperature))
+            self.ui.cameratempActualTemp.setText(str(self.ui.andor.temperature))
             time.sleep(4)
 
 
-class ShutDown(QtCore.QRunnable):
-    pass
+# class ShutDown(QtCore.QRunnable):
+#     def __init__(self, ui):
+#         super(ShutDown, self).__init__()
+#         self.ui = ui
+#
+#     @QtCore.pyqtSlot()
+#     def run(self):
+#         self.ui.acquiring = False
+#         self.ui.gettingtemp = False
+#
+#         self.ui.andor.setshutter(1, 2, 0, 0)
+#         self.ui.andor.iscooleron()
+#         self.ui.andor.gettemperature()
+#
+#         if self.ui.andor.coolerstatus == 0 and self.ui.andor.temperature
 
 
 class AcquireThread(QtCore.QRunnable):
