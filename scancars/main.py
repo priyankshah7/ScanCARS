@@ -70,11 +70,11 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # ------------------------------------------------------------------------------------------------------------
         # Startup Processes
-        post.event_date(self)
+        # post.event_date(self)
 
         # Initializing the camera
-        self.initialize_andor()
-        self.width = self.andor.width
+        # self.initialize_andor()
+        # self.width = self.andor.width
         # ------------------------------------------------------------------------------------------------------------
 
     def __del__(self):
@@ -297,7 +297,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # progress_darkcount = ((darkcount * self.ui.darkexposure) / total) * 100
 
         # Darkcount acquisition
-        self.andor.setshutter(1, 1, 0, 0)
+        self.andor.setshutter(1, 2, 0, 0)
         self.andor.setexposuretime(exposuretime)
         self.andor.setacquisitionmode(1)
         cimage = (ctypes.c_long * self.andor.dim)()
