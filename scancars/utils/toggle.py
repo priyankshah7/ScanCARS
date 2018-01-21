@@ -17,17 +17,17 @@ def deactivate_buttons(self, main_start_acq_stat=False, main_shutdown_stat=False
                        cameraoptions_openimage_stat=False, cameraoptions_update_stat=False,
                        spectralacq_start_stat=False, spectralacq_update_stat=False, hyperacq_start_stat=False):
 
-    self.Main_start_acq.setEnabled(main_start_acq_stat)
-    self.Main_shutdown.setEnabled(main_shutdown_stat)
-    self.CameraTemp_cooler_on.setEnabled(cameratemp_cooler_stat)
-    self.SpectraWin_sum_track.setEnabled(spectrawin_sum_stat)
-    self.SpectraWin_single_track.setEnabled(spectrawin_single_stat)
-    self.Grating_update.setEnabled(grating_update_stat)
-    self.CameraOptions_openimage.setEnabled(cameraoptions_openimage_stat)
-    self.CameraOptions_update.setEnabled(cameraoptions_update_stat)
-    self.SpectralAcq_start.setEnabled(spectralacq_start_stat)
-    self.SpectralAcq_update_time.setEnabled(spectralacq_update_stat)
-    self.HyperAcq_start.setEnabled(hyperacq_start_stat)
+    self.buttonMainStartAcquisition.setEnabled(main_start_acq_stat)
+    self.buttonMainShutdown.setEnabled(main_shutdown_stat)
+    self.buttonCameratempCooler.setEnabled(cameratemp_cooler_stat)
+    self.buttonDialogsSum.setEnabled(spectrawin_sum_stat)
+    self.buttonDialogsDifference.setEnabled(spectrawin_single_stat)
+    self.buttonGratingUpdate.setEnabled(grating_update_stat)
+    self.buttonCamtrackView.setEnabled(cameraoptions_openimage_stat)
+    self.buttonCamtrackUpdate.setEnabled(cameraoptions_update_stat)
+    self.buttonSpectralStart.setEnabled(spectralacq_start_stat)
+    self.buttonSpectralUpdate.setEnabled(spectralacq_update_stat)
+    self.buttonHyperspectralStart.setEnabled(hyperacq_start_stat)
 
 
 def activate_buttons(self, main_start_acq_stat=True, main_shutdown_stat=True, cameratemp_cooler_stat=True,
@@ -35,14 +35,14 @@ def activate_buttons(self, main_start_acq_stat=True, main_shutdown_stat=True, ca
                      cameraoptions_openimage_stat=True, cameraoptions_update_stat=True,
                      spectralacq_start_stat=True, spectralacq_update_stat=True, hyperacq_start_stat=True):
 
-    self.Main_start_acq.setEnabled(main_start_acq_stat)
-    self.Main_shutdown.setEnabled(main_shutdown_stat)
-    self.CameraTemp_cooler_on.setEnabled(cameratemp_cooler_stat)
-    self.SpectraWin_sum_track.setEnabled(spectrawin_sum_stat)
-    self.SpectraWin_single_track.setEnabled(spectrawin_single_stat)
-    self.Grating_update.setEnabled(grating_update_stat)
-    self.CameraOptions_openimage.setEnabled(cameraoptions_openimage_stat)
-    self.CameraOptions_update.setEnabled(cameraoptions_update_stat)
-    self.SpectralAcq_start.setEnabled(spectralacq_start_stat)
-    self.SpectralAcq_update_time.setEnabled(spectralacq_update_stat)
-    self.HyperAcq_start.setEnabled(hyperacq_start_stat)
+    self.buttonMainStartAcquisition.setEnabled(main_start_acq_stat)
+    self.buttonMainShutdown.setEnabled(main_shutdown_stat)
+    self.buttonCameratempCooler.setEnabled(cameratemp_cooler_stat)
+    self.buttonDialogsSum.setEnabled(spectrawin_sum_stat)
+    self.buttonDialogsDifference.setEnabled(spectrawin_single_stat)
+    self.buttonGratingUpdate.setEnabled(grating_update_stat)
+    self.buttonCamtrackView.setEnabled(cameraoptions_openimage_stat)
+    self.buttonCamtrackUpdate.setEnabled(cameraoptions_update_stat)
+    self.buttonSpectralStart.setEnabled(spectralacq_start_stat)
+    self.buttonSpectralUpdate.setEnabled(spectralacq_update_stat)
+    self.buttonHyperspectralStart.setEnabled(hyperacq_start_stat)
