@@ -1,1468 +1,1003 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <author>Priyank Shah</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1512</width>
-    <height>995</height>
+    <width>1468</width>
+    <height>773</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ScanCARS</string>
+   <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">/*
-	Copyright 2013 Emanuel Claesson
-
-	Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-	you may not use this file except in compliance with the License.
-	You may obtain a copy of the License at
-
-		http://www.apache.org/licenses/LICENSE-2.0
-
-	Unless required by applicable law or agreed to in writing, software
-	distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	See the License for the specific language governing permissions and
-	limitations under the License.
-*/
-
-/*
-	COLOR_DARK     = #191919
-	COLOR_MEDIUM   = #353535
-	COLOR_MEDLIGHT = #5A5A5A
-	COLOR_LIGHT    = #DDDDDD
-	COLOR_ACCENT   = #3D7848
-*/
-
-* {
-	background: #191919;
-	color: #DDDDDD;
-	border: 1px solid #5A5A5A;
-}
-
-QWidget::item:selected {
-	background: #3D7848;
-}
-
-QCheckBox, QRadioButton {
-	border: none;
-}
-
-QRadioButton::indicator, QCheckBox::indicator {
-	width: 13px;
-	height: 13px;
-}
-
-QRadioButton::indicator::unchecked, QCheckBox::indicator::unchecked {
-	border: 1px solid #5A5A5A;
-	background: none;
-}
-
-QRadioButton::indicator:unchecked:hover, QCheckBox::indicator:unchecked:hover {
-	border: 1px solid #DDDDDD;
-}
-
-QRadioButton::indicator::checked, QCheckBox::indicator::checked {
-	border: 1px solid #5A5A5A;
-	background: #5A5A5A;
-}
-
-QRadioButton::indicator:checked:hover, QCheckBox::indicator:checked:hover {
-	border: 1px solid #DDDDDD;
-	background: #DDDDDD;
-}
-
-QGroupBox {
-	margin-top: 6px;
-}
-
-QGroupBox::title {
-	top: -7px;
-	left: 7px;
-}
-
-QScrollBar {
-	border: 1px solid #5A5A5A;
-	background: #191919;
-}
-
-QScrollBar:horizontal {
-	height: 15px;
-	margin: 0px 0px 0px 32px;
-}
-
-QScrollBar:vertical {
-	width: 15px;
-	margin: 32px 0px 0px 0px;
-}
-
-QScrollBar::handle {
-	background: #353535;
-	border: 1px solid #5A5A5A;
-}
-
-QScrollBar::handle:horizontal {
-	border-width: 0px 1px 0px 1px;
-}
-
-QScrollBar::handle:vertical {
-	border-width: 1px 0px 1px 0px;
-}
-
-QScrollBar::handle:horizontal {
-	min-width: 20px;
-}
-
-QScrollBar::handle:vertical {
-	min-height: 20px;
-}
-
-QScrollBar::add-line, QScrollBar::sub-line {
-	background:#353535;
-	border: 1px solid #5A5A5A;
-	subcontrol-origin: margin;
-}
-
-QScrollBar::add-line {
-	position: absolute;
-}
-
-QScrollBar::add-line:horizontal {
-	width: 15px;
-	subcontrol-position: left;
-	left: 15px;
-}
-
-QScrollBar::add-line:vertical {
-	height: 15px;
-	subcontrol-position: top;
-	top: 15px;
-}
-
-QScrollBar::sub-line:horizontal {
-	width: 15px;
-	subcontrol-position: top left;
-}
-
-QScrollBar::sub-line:vertical {
-	height: 15px;
-	subcontrol-position: top;
-}
-
-QScrollBar:left-arrow, QScrollBar::right-arrow, QScrollBar::up-arrow, QScrollBar::down-arrow {
-	border: 1px solid #5A5A5A;
-	width: 3px;
-	height: 3px;
-}
-
-QScrollBar::add-page, QScrollBar::sub-page {
-	background: none;
-}
-
-QAbstractButton:hover {
-	background: #353535;
-}
-
-QAbstractButton:pressed {
-	background: #5A5A5A;
-}
-
-QAbstractItemView {
-	show-decoration-selected: 1;
-	selection-background-color: #3D7848;
-	selection-color: #DDDDDD;
-	alternate-background-color: #353535;
-}
-
-QHeaderView {
-	border: 1px solid #5A5A5A;
-}
-
-QHeaderView::section {
-	background: #191919;
-	border: 1px solid #5A5A5A;
-	padding: 4px;
-}
-
-QHeaderView::section:selected, QHeaderView::section::checked {
-	background: #353535;
-}
-
-QTableView {
-	gridline-color: #5A5A5A;
-}
-
-QTabBar {
-	margin-left: 2px;
-}
-
-QTabBar::tab {
-	border-radius: 0px;
-	padding: 4px;
-	margin: 4px;
-}
-
-QTabBar::tab:selected {
-	background: #353535;
-}
-
-QComboBox::down-arrow {
-	border: 1px solid #5A5A5A;
-	background: #353535;
-}
-
-QComboBox::drop-down {
-	border: 1px solid #5A5A5A;
-	background: #353535;
-}
-
-QComboBox::down-arrow {
-	width: 3px;
-	height: 3px;
-	border: 1px solid #5A5A5A;
-}
-
-QAbstractSpinBox {
-	padding-right: 15px;
-}
-
-QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
-	border: 1px solid #5A5A5A;
-	background: #353535;
-	subcontrol-origin: border;
-}
-
-QAbstractSpinBox::up-arrow, QAbstractSpinBox::down-arrow {
-	width: 3px;
-	height: 3px;
-	border: 1px solid #5A5A5A;
-}
-
-QSlider {
-	border: none;
-}
-
-QSlider::groove:horizontal {
-	height: 5px;
-	margin: 4px 0px 4px 0px;
-}
-
-QSlider::groove:vertical {
-	width: 5px;
-	margin: 0px 4px 0px 4px;
-}
-
-QSlider::handle {
-	border: 1px solid #5A5A5A;
-	background: #353535;
-}
-
-QSlider::handle:horizontal {
-	width: 15px;
-	margin: -4px 0px -4px 0px;
-}
-
-QSlider::handle:vertical {
-	height: 15px;
-	margin: 0px -4px 0px -4px;
-}
-
-QSlider::add-page:vertical, QSlider::sub-page:horizontal {
-	background: #3D7848;
-}
-
-QSlider::sub-page:vertical, QSlider::add-page:horizontal {
-	background: #353535;
-}
-
-QLabel {
-	border: none;
-}
-
-QProgressBar {
-	text-align: center;
-}
-
-QProgressBar::chunk {
-	width: 1px;
-	background-color: #3D7848;
-}
-
-QMenu::separator {
-	background: #353535;
-}
-</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="Main_start_acq">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>20</y>
-      <width>141</width>
-      <height>34</height>
-     </rect>
+   <layout class="QGridLayout" name="gridLayout" rowstretch="4,66,30">
+    <property name="leftMargin">
+     <number>15</number>
     </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background: #323e30;
-}
-
-QPushButton:hover {
-    background: #3e5f41;
-}
-
-QPushButton:pressed {
-    background: #537f57;     
-}</string>
+    <property name="topMargin">
+     <number>15</number>
     </property>
-    <property name="text">
-     <string>Start Acquisition</string>
+    <property name="rightMargin">
+     <number>15</number>
     </property>
-   </widget>
-   <widget class="QPushButton" name="Main_shutdown">
-    <property name="geometry">
-     <rect>
-      <x>1340</x>
-      <y>20</y>
-      <width>141</width>
-      <height>34</height>
-     </rect>
+    <property name="bottomMargin">
+     <number>15</number>
     </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background: #4a1b15;
-}
-
-QPushButton:hover {
-    background: #62221b;
-}
-
-QPushButton:pressed {
-    background: #762720;     
-}</string>
-    </property>
-    <property name="text">
-     <string>Shut Down</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="Main_status">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>20</y>
-      <width>1131</width>
-      <height>34</height>
-     </rect>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="readOnly">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QGroupBox" name="group_CameraTemp">
-    <property name="geometry">
-     <rect>
-      <x>1340</x>
-      <y>70</y>
-      <width>141</width>
-      <height>151</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Camera Temp.</string>
-    </property>
-    <widget class="QLineEdit" name="CameraTemp_temp_text">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>30</y>
-       <width>51</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Temp:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraTemp_temp_req">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>30</y>
-       <width>71</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>-80</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="CameraTemp_cooler_on">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>70</y>
-       <width>121</width>
-       <height>34</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Cooler On</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraTemp_temp_actual">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>110</y>
-       <width>121</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="group_SpectraWin">
-    <property name="geometry">
-     <rect>
-      <x>1340</x>
-      <y>240</y>
-      <width>141</width>
-      <height>121</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Spectral Windows</string>
-    </property>
-    <widget class="QPushButton" name="SpectraWin_single_track">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>30</y>
-       <width>121</width>
-       <height>34</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Single Tracks</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="SpectraWin_sum_track">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>70</y>
-       <width>121</width>
-       <height>34</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Sum</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="group_Grating">
-    <property name="geometry">
-     <rect>
-      <x>1340</x>
-      <y>380</y>
-      <width>141</width>
-      <height>171</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Spectral Grating</string>
-    </property>
-    <widget class="QRadioButton" name="Grating_150">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>30</y>
-       <width>121</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>&amp;150 lines/mm</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="Grating_600">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>60</y>
-       <width>121</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>&amp;600 lines/mm</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="Grating_lambda_text">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>90</y>
-       <width>71</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Center λ:</string>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="Grating_wavelength">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>90</y>
-       <width>51</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>682</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="Grating_update">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>130</y>
-       <width>121</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Update</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="group_EventLogger">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>700</y>
-      <width>401</width>
-      <height>231</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Event Logger</string>
-    </property>
-    <widget class="QPlainTextEdit" name="EventLogger_box">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>381</width>
-       <height>201</height>
-      </rect>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="group_CameraOptions">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>560</y>
-      <width>401</width>
-      <height>131</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Camera Options</string>
-    </property>
-    <widget class="QLineEdit" name="CameraOptions_track1lower_text">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>30</y>
-       <width>91</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Track 1 Lower:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraOptions_track1lower">
-     <property name="geometry">
-      <rect>
-       <x>130</x>
-       <y>30</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>165</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraOptions_track1upper_text">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>60</y>
-       <width>91</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Track 1 Upper:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraOptions_track1upper">
-     <property name="geometry">
-      <rect>
-       <x>130</x>
-       <y>60</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>198</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraOptions_track2lower_text">
-     <property name="geometry">
-      <rect>
-       <x>220</x>
-       <y>30</y>
-       <width>91</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Track 2 Lower:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraOptions_track2upper">
-     <property name="geometry">
-      <rect>
-       <x>320</x>
-       <y>60</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>244</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraOptions_track2upper_text">
-     <property name="geometry">
-      <rect>
-       <x>220</x>
-       <y>60</y>
-       <width>91</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Track 2 Upper:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="CameraOptions_track2lower">
-     <property name="geometry">
-      <rect>
-       <x>320</x>
-       <y>30</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>211</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="CameraOptions_update">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>90</y>
-       <width>151</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Update Tracks</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="CameraOptions_openimage">
-     <property name="geometry">
-      <rect>
-       <x>220</x>
-       <y>90</y>
-       <width>151</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>View CCD Tracks</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="group_SpectralAcq">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>560</y>
-      <width>541</width>
-      <height>131</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Spectral Acquisition</string>
-    </property>
-    <widget class="QLineEdit" name="SpectralAcq_time_text">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>30</y>
-       <width>131</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Acquisition Time (s):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="SpectralAcq_actual_time">
-     <property name="geometry">
-      <rect>
-       <x>160</x>
-       <y>60</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>0.005</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="SpectralAcq_actual_time_text">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>60</y>
-       <width>131</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Actual Acq. Time (s):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="SpectralAcq_update_time">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>90</y>
-       <width>211</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Update Time</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="SpectralAcq_darkfield">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>30</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>100</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="SpectralAcq_darkfield_text">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>30</y>
-       <width>161</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Dark Field (no. of frames):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="SpectralAcq_frame_text">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>60</y>
-       <width>161</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>No. of frames required:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="SpectralAcq_frames">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>60</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>300</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="SpectralAcq_start">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>90</y>
-       <width>241</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton {
-    background: #323e30;
-}
-
-QPushButton:hover {
-    background: #3e5f41;
-}
-
-QPushButton:pressed {
-    background: #537f57;     
-}</string>
-     </property>
-     <property name="text">
-      <string>Start Spectral Acquisition</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="SpectralAcq_time_req">
-     <property name="geometry">
-      <rect>
-       <x>160</x>
-       <y>30</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="singleStep">
-      <double>0.010000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.050000000000000</double>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QProgressBar" name="Main_progress">
-    <property name="geometry">
-     <rect>
-      <x>1010</x>
-      <y>900</y>
-      <width>471</width>
-      <height>30</height>
-     </rect>
-    </property>
-    <property name="value">
-     <number>0</number>
-    </property>
-   </widget>
-   <widget class="QGroupBox" name="group_HyperAcq">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>700</y>
-      <width>541</width>
-      <height>231</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Hyperspectral Image Acquisition</string>
-    </property>
-    <widget class="QLineEdit" name="HyperAcq_time_text">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>30</y>
-       <width>131</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Acquisition Time (s):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_darkfield_text">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>30</y>
-       <width>161</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Dark Field (no. of frames):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_darkfield">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>30</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>100</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_xpixel_text">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>80</y>
-       <width>61</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>X Pixels:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_xpixel">
-     <property name="geometry">
-      <rect>
-       <x>140</x>
-       <y>80</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>50</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_ypixel_text">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>110</y>
-       <width>61</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Y Pixels:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_ypixel">
-     <property name="geometry">
-      <rect>
-       <x>140</x>
-       <y>110</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>10</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_zpixel_text">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>140</y>
-       <width>61</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Z Pixels:</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_zpixel">
-     <property name="geometry">
-      <rect>
-       <x>140</x>
-       <y>140</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>1</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_xystep_text">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>80</y>
-       <width>121</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>XY Step Size (μm):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_zstep_text">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>110</y>
-       <width>111</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Z Step Size (μm):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_zstep">
-     <property name="geometry">
-      <rect>
-       <x>390</x>
-       <y>110</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>0.5</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_xystep">
-     <property name="geometry">
-      <rect>
-       <x>390</x>
-       <y>80</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>0.3</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="SpectralAcq_time_req_8">
-     <property name="geometry">
-      <rect>
-       <x>390</x>
-       <y>140</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>0.00</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="HyperAcq_est_time_text">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>140</y>
-       <width>141</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">border: 0</string>
-     </property>
-     <property name="text">
-      <string>Estimated Time (min):</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="HyperAcq_start">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>190</y>
-       <width>501</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton {
-    background: #323e30;
-}
-
-QPushButton:hover {
-    background: #3e5f41;
-}
-
-QPushButton:pressed {
-    background: #537f57;     
-}</string>
-     </property>
-     <property name="text">
-      <string>Start HSI Acquisition</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="HyperAcq_time_req">
-     <property name="geometry">
-      <rect>
-       <x>160</x>
-       <y>30</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="singleStep">
-      <double>0.010000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.050000000000000</double>
-     </property>
-    </widget>
-   </widget>
-   <widget class="PlotWidget" name="Main_specwin">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>70</y>
-      <width>1291</width>
-      <height>481</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="ImageView" name="Main_imagewin">
-    <property name="geometry">
-     <rect>
-      <x>1010</x>
-      <y>570</y>
-      <width>471</width>
-      <height>331</height>
-     </rect>
-    </property>
-   </widget>
+    <item row="0" column="1" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="10,80,10">
+      <item>
+       <widget class="QPushButton" name="buttonMainStartAcquisition">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start/Stop acquisition. This will give a live view of the tracks on the camera at the set exposure time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Start Acquisition</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="mainStatus">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonMainShutdown">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Shut Down</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="1" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="95">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="PlotWidget" name="specwinMain">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item row="2" column="1" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="45,55">
+      <item>
+       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0" columnstretch="45,0,25,0,15,0,15">
+        <item row="1" column="0">
+         <widget class="QGroupBox" name="groupBox_4">
+          <property name="title">
+           <string>Camera Track Options</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_3" rowstretch="0" columnstretch="47,6,47">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetMinimumSize</enum>
+           </property>
+           <property name="verticalSpacing">
+            <number>6</number>
+           </property>
+           <item row="0" column="0">
+            <layout class="QFormLayout" name="formLayout_3">
+             <property name="sizeConstraint">
+              <enum>QLayout::SetNoConstraint</enum>
+             </property>
+             <property name="formAlignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+             <property name="leftMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Lower (1):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="camtrackUpper1">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>1024</number>
+               </property>
+               <property name="value">
+                <number>198</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QPushButton" name="buttonCamtrackUpdate">
+               <property name="text">
+                <string>Update Tracks</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="camtrackLower1">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>1024</number>
+               </property>
+               <property name="value">
+                <number>165</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Upper (1):</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="2">
+            <layout class="QFormLayout" name="formLayout_4">
+             <property name="formAlignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+             <property name="leftMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_3">
+               <property name="text">
+                <string>Lower (2):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QPushButton" name="buttonCamtrackView">
+               <property name="text">
+                <string>View CCD Tracks</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="camtrackUpper2">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>1024</number>
+               </property>
+               <property name="value">
+                <number>244</number>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="camtrackLower2">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>1024</number>
+               </property>
+               <property name="value">
+                <number>211</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>Upper (2):</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="3" column="5">
+         <spacer name="horizontalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="2">
+         <widget class="QGroupBox" name="groupBox_5">
+          <property name="title">
+           <string>Spectral Acquisition</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_8" columnstretch="47,6,47">
+           <item row="0" column="2">
+            <layout class="QFormLayout" name="formLayout_8">
+             <property name="formAlignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+             <property name="leftMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>Background frames:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>Spectral frames:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QPushButton" name="buttonSpectralStart">
+               <property name="text">
+                <string>Start Spectral Acquisition</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="spectralBackgroundFrames">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="spectralFrames">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>100</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0">
+            <layout class="QFormLayout" name="formLayout_7">
+             <property name="formAlignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+             <property name="leftMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>Exposure Time (s):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Actual Exp. Time (s):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QPushButton" name="buttonSpectralUpdate">
+               <property name="text">
+                <string>Update Time</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="spectralRequiredTime">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>10.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.050000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="spectralActualTime">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="6">
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Spectra Dialogs</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="0" column="0">
+            <widget class="QPushButton" name="buttonDialogsDifference">
+             <property name="text">
+              <string>Difference
+Plot</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="buttonDialogsSum">
+             <property name="text">
+              <string>Sum
+Plot</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QGroupBox" name="groupBox_7">
+          <property name="title">
+           <string>Hyperspectral Acquisition</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_7" rowstretch="80,20" columnstretch="50,50">
+           <item row="1" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <widget class="QPushButton" name="buttonHyperspectralStart">
+               <property name="text">
+                <string>Start Hyperspectral Acquisition</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1">
+            <layout class="QFormLayout" name="formLayout_10">
+             <property name="leftMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>Background frames: </string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>XY Step Size (μm): </string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string>Z Step Size (μm):</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_16">
+               <property name="text">
+                <string>Estimated Time (min): </string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="hyperspectralBackgroundFrames">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="hyperspectralXYStep">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.300000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="hyperspectralZStep">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.500000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLineEdit" name="hyperspectralEstTime">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0">
+            <layout class="QFormLayout" name="formLayout_9">
+             <property name="leftMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>Exposure Time (s):  </string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>No. of X Pixels:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>No. of Y Pixels:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>No. of Z Pixels:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="hyperspectralRequiredTime">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>10.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.050000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="hyperspectralXPix">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>100</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="hyperspectralYPix">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>100</number>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QSpinBox" name="hyperspectralZPix">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>1</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QGroupBox" name="groupBox_6">
+          <property name="title">
+           <string>Event Logger</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_6">
+           <item row="0" column="0">
+            <widget class="QPlainTextEdit" name="eventLogger">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QGroupBox" name="groupBox_9">
+          <property name="title">
+           <string>Spectrometer Grating</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_14">
+           <property name="formAlignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+           <item row="0" column="0" colspan="2">
+            <widget class="QRadioButton" name="grating150">
+             <property name="text">
+              <string>150 lines/mm</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QRadioButton" name="grating600">
+             <property name="text">
+              <string>600 lines/mm</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_20">
+             <property name="text">
+              <string>Req. λ (nm):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <widget class="QPushButton" name="buttonGratingUpdate">
+             <property name="text">
+              <string>Update</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>Actual λ (nm):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="gratingActualWavelength">
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="gratingRequiredWavelength">
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="minimum">
+              <number>300</number>
+             </property>
+             <property name="maximum">
+              <number>999</number>
+             </property>
+             <property name="value">
+              <number>682</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="6">
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="title">
+           <string>Plot Tools</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QGroupBox" name="groupBox_10">
+          <property name="title">
+           <string>Camera Temperature</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_13">
+           <item row="2" column="0" colspan="2">
+            <widget class="QPushButton" name="buttonCameratempCooler">
+             <property name="text">
+              <string>Cooler On</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>Temp:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="cameratempRequiredTemp">
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="minimum">
+              <number>-100</number>
+             </property>
+             <property name="maximum">
+              <number>30</number>
+             </property>
+             <property name="value">
+              <number>-80</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QLineEdit" name="cameratempActualTemp">
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="2">
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QGridLayout" name="gridLayout_5" rowstretch="98,0" columnstretch="40,60">
+        <item row="0" column="1">
+         <widget class="PlotWidget" name="specwinPrevious">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="ImageView" name="imagewinMain">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QProgressBar" name="progressbar">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="value">
+           <number>64</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1512</width>
-     <height>22</height>
+     <width>1468</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen_Hyperspectral_Viewer">
+   <property name="text">
+    <string>Open Hyperspectral Viewer</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
+   </property>
+  </action>
+  <action name="actionOpen_Sum_Spectrum">
+   <property name="text">
+    <string>Open Sum Spectrum</string>
+   </property>
+  </action>
+  <action name="actionOpen_Difference_Spectrum">
+   <property name="text">
+    <string>Open Difference Spectrum</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph</header>
+   <header location="global">pyqtgraph</header>
   </customwidget>
   <customwidget>
    <class>ImageView</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph</header>
+   <header location="global">pyqtgraph</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>buttonMainStartAcquisition</tabstop>
+  <tabstop>mainStatus</tabstop>
+  <tabstop>buttonMainShutdown</tabstop>
+  <tabstop>specwinMain</tabstop>
+  <tabstop>camtrackLower1</tabstop>
+  <tabstop>camtrackUpper1</tabstop>
+  <tabstop>camtrackLower2</tabstop>
+  <tabstop>camtrackUpper2</tabstop>
+  <tabstop>buttonCamtrackUpdate</tabstop>
+  <tabstop>buttonCamtrackView</tabstop>
+  <tabstop>spectralRequiredTime</tabstop>
+  <tabstop>spectralBackgroundFrames</tabstop>
+  <tabstop>spectralActualTime</tabstop>
+  <tabstop>spectralFrames</tabstop>
+  <tabstop>buttonSpectralUpdate</tabstop>
+  <tabstop>buttonSpectralStart</tabstop>
+  <tabstop>cameratempRequiredTemp</tabstop>
+  <tabstop>cameratempActualTemp</tabstop>
+  <tabstop>buttonCameratempCooler</tabstop>
+  <tabstop>buttonDialogsDifference</tabstop>
+  <tabstop>buttonDialogsSum</tabstop>
+  <tabstop>eventLogger</tabstop>
+  <tabstop>hyperspectralRequiredTime</tabstop>
+  <tabstop>hyperspectralBackgroundFrames</tabstop>
+  <tabstop>hyperspectralXPix</tabstop>
+  <tabstop>hyperspectralXYStep</tabstop>
+  <tabstop>hyperspectralYPix</tabstop>
+  <tabstop>hyperspectralZStep</tabstop>
+  <tabstop>hyperspectralZPix</tabstop>
+  <tabstop>hyperspectralEstTime</tabstop>
+  <tabstop>buttonHyperspectralStart</tabstop>
+  <tabstop>grating150</tabstop>
+  <tabstop>grating600</tabstop>
+  <tabstop>gratingRequiredWavelength</tabstop>
+  <tabstop>gratingActualWavelength</tabstop>
+  <tabstop>buttonGratingUpdate</tabstop>
+  <tabstop>imagewinMain</tabstop>
+  <tabstop>specwinPrevious</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
