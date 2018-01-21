@@ -8,14 +8,14 @@ from PyQt5.Qt import QPalette, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactory
 
 from scancars.gui import dialogs
-from scancars.gui.forms import testlayout
+from scancars.gui.forms import main
 from scancars.gui.css import setstyle
 from scancars.threads import uithreads
 from scancars.utils import post, toggle, savetofile
 from scancars.sdk.andor import pyandor
 
 
-class ScanCARS(QMainWindow, testlayout.Ui_MainWindow):
+class ScanCARS(QMainWindow, main.Ui_MainWindow):
     def __init__(self, parent=None):
         super(ScanCARS, self).__init__(parent)
         self.setupUi(self)
