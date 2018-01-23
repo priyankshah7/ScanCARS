@@ -29,6 +29,7 @@ The following python packages are also required:
 + pyqtgraph
 + PyQt5
 + h5py
++ pyvisa
 + nidaqmx
 
 ### Data output
