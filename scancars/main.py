@@ -1,6 +1,7 @@
 import sys
 import time
 import ctypes
+import pyvisa
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -10,7 +11,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactor
 from scancars.gui import dialogs
 from scancars.gui.forms import main
 from scancars.gui.css import setstyle
-from scancars.threads import uithreads
+from scancars.threads import uithreads, grating
 from scancars.utils import post, toggle, savetofile
 from scancars.sdk.andor import pyandor
 
@@ -75,6 +76,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.initialize_andor()
         self.width = self.andor.width
 
+        # Initialising the PI Isoplane
+        self.isoplane = None
+        self.initialize_isoplane()
+
         # Misc
         self.progressbar.setValue(0)
 
@@ -104,9 +109,15 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.andor.sethsspeed(1, 0)                 # Setting the horiz. shift speed
         self.andor.setvsspeed(4)                    # Setting the verti. shift speed
 
+        self.exposuretime = float(self.spectralRequiredTime.text())
+        self.andor.setexposuretime(self.exposuretime)
+
         time.sleep(2)
 
         self.andor.dim = self.andor.width * self.andor.randomtracks
+
+        self.andor.getacquisitiontimings()
+        self.spectralActualTime.setText(str(round(self.andor.exposure, 3)))
 
         toggle.activate_buttons(self)
         post.eventlog(self, 'Andor: Successfully initialized.')
@@ -115,6 +126,17 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.gettingtemp = True
         gettemperature = uithreads.TemperatureThread(self)
         self.threadpool.start(gettemperature)
+
+    def initialize_isoplane(self):
+        rm = pyvisa.ResourceManager()
+        self.isoplane = rm.open_resource('ASRL4::INSTR')
+        self.isoplane.timeout = 20
+        self.isoplane.baud_rate = 9600
+
+        self.isoplane.read_termination = '\r'
+        self.isoplane.write_termination = '\r'
+
+        post.eventlog(self, 'Isoplane: Connected.')
 
     # Main: defining methods
     def main_startacq(self):
@@ -171,6 +193,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.shutdown()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
+            post.status(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
 
         # If the cooler is on, turn it off, wait for temp. to increase to -20C, and then shutdown camera
@@ -189,7 +212,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.shutdown()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
+            post.status(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
+
+        self.isoplane.close()
 
     # CameraTemp: defining methods
     def cameratemp_cooler(self):
@@ -206,6 +232,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
                 self.andor.iscooleron()
                 if self.andor.coolerstatus == 1:
                     post.eventlog(self, 'Andor: Cooler on.')
+                    self.cameratempActualTemp.setStyleSheet('background: #4e644e')
                     self.buttonCameratempCooler.setText('Cooler Off')
 
             elif self.andor.coolerstatus == 1:
@@ -214,6 +241,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
                 self.andor.iscooleron()
                 if self.andor.coolerstatus == 0:
                     post.eventlog(self, 'Andor: Cooler off.')
+                    self.cameratempActualTemp.setStyleSheet('background: #121212')
                     self.buttonCameratempCooler.setText('Cooler On')
 
             else:
@@ -229,7 +257,17 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # Grating: defining methods
     def grating_update(self):
-        pass
+        grating_no = grating.get_grating(self.isoplane)
+        wavelength_no = grating.get_nm(self.isoplane)
+
+        if self.grating150.isChecked() and grating_no == 2:
+            grating.set_grating(self.isoplane, 2)
+
+        elif self.grating600.isChecked() and grating_no == 3:
+            grating.set_grating(self.isoplane, 3)
+
+        if int(self.gratingRequiredWavelength.text()) != wavelength_no:
+            grating.set_nm(self.isoplane, int(self.gratingRequiredWavelength.text()))
 
     # CamTracks: Defining methods
     def camtracks_update(self):
@@ -315,6 +353,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.specwinMain.plot(acquired_data[512:1023], pen='g')
         self.specwinMain.plot(acquired_data[512:1023] - acquired_data[0:511], pen='w')
 
+        self.specwinPrevious.clear()
+        self.specwinPrevious.plot(acquired_data[512:1023] - acquired_data[0:511], pen='w')
+
         # # Saving the data to file
         filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
                                                directory='C:\\Users\\CARS\\Documents\\LabVIEW Data\\CARS data files\\priyank\\new software')
@@ -327,16 +368,18 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
             savetofile.save(acquired_data, str(filename[0]), acqproperties, acqtype='spectral')
 
+            self.progressbar.setValue(100)
             post.eventlog(self, 'Spectral acquisition saved.')  # TODO Print file name saved to as well
 
         else:
+            self.progressbar.setValue(100)
             post.eventlog(self, 'Acquisition aborted.')
 
         # Finishing up UI acquisition call
         self.andor.setshutter(1, 2, 0, 0)
         post.status(self, '')
         self.spectralacquiring = False
-        self.progressbar.setValue(100)
+        self.progressbar.setValue(0)
         toggle.activate_buttons(self)
 
     def hyperacq_start(self):
@@ -350,20 +393,22 @@ def main():
     app.setStyle(QStyleFactory.create('Fusion'))
     dark_palette = QPalette()
     dark_palette.setColor(QPalette.Window, QColor(23, 23, 23))
-    dark_palette.setColor(QPalette.WindowText, Qt.white)
+    dark_palette.setColor(QPalette.WindowText, QColor(200, 200, 200))
     dark_palette.setColor(QPalette.Base, QColor(18, 18, 18))
     dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
     dark_palette.setColor(QPalette.ToolTipBase, Qt.white)
     dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-    dark_palette.setColor(QPalette.Text, Qt.white)
+    dark_palette.setColor(QPalette.Text, QColor(200, 200, 200))
     dark_palette.setColor(QPalette.Button, QColor(33, 33, 33))
-    dark_palette.setColor(QPalette.ButtonText, Qt.white)
+    dark_palette.setColor(QPalette.ButtonText, QColor(200, 200, 200))
     dark_palette.setColor(QPalette.BrightText, Qt.red)
     dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.HighlightedText, Qt.white)
+    dark_palette.setColor(QPalette.Active, QPalette.Button, QColor(33, 33, 33))
+    dark_palette.setColor(QPalette.Disabled, QPalette.Button, QColor(23, 23, 23))
+    dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(130, 130, 130))
     app.setPalette(dark_palette)
-    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
 
     form = ScanCARS()
     form.setWindowTitle('ScanCARS')
