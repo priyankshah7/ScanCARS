@@ -46,8 +46,9 @@ class TemperatureThread(QtCore.QRunnable):
     @QtCore.pyqtSlot()
     def run(self):
         while self.ui.gettingtemp:
-            self.ui.andor.gettemperature()
-            self.ui.cameratempActualTemp.setText(str(self.ui.andor.temperature))
+            if not self.ui.acquiring:
+                self.ui.andor.gettemperature()
+                self.ui.cameratempActualTemp.setText(str(self.ui.andor.temperature))
             time.sleep(4)
 
 
