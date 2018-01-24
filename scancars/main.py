@@ -1,17 +1,20 @@
+import os
 import sys
 import time
+import datetime
 import ctypes
 import pyvisa
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.Qt import QPalette, QColor
+from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactory
 
 from scancars.gui import dialogs
 from scancars.gui.forms import main
 from scancars.gui.css import setstyle
-from scancars.threads import uithreads, grating
+from scancars.threads import uithreads#, grating
 from scancars.utils import post, toggle, savetofile
 from scancars.sdk.andor import pyandor
 
@@ -42,8 +45,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.darkexposure = 0.1
 
         # Plot/Image settings
-        self.specwinMain.plotItem.showGrid(x=True, y=True, alpha=0.1)
-        self.specwinPrevious.plotItem.showGrid(x=True, y=True, alpha=0.1)
+        self.specwinMain.plotItem.showGrid(x=True, y=True, alpha=0.2)
+        self.specwinPrevious.plotItem.showGrid(x=True, y=True, alpha=0.2)
         self.specwinMain.setXRange(-10, 520, padding=0)
         self.specwinPrevious.setXRange(-10, 520, padding=0)
         self.specwinMain.plotItem.setMenuEnabled(False)
@@ -77,8 +80,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.width = self.andor.width
 
         # Initialising the PI Isoplane
-        self.isoplane = None
-        self.initialize_isoplane()
+        # self.isoplane = None
+        # self.initialize_isoplane()
+        self.buttonGratingUpdate.setDisabled(True)
 
         # Misc
         self.progressbar.setValue(0)
@@ -147,8 +151,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.buttonMainStartAcquisition.setText('Stop Acquisition')
 
             self.specwinMain.clear()
-            track1plot = self.specwinMain.plot(pen='r', name='track1')
-            track2plot = self.specwinMain.plot(pen='g', name='track2')
+            track1plot = self.specwinMain.plot(pen=(190, 70, 45), name='track1')
+            track2plot = self.specwinMain.plot(pen=(25, 85, 120), name='track2')
             diffplot = self.specwinMain.plot(pen='w', name='trackdiff')
 
             cimage = (ctypes.c_int * self.andor.dim)()
@@ -169,7 +173,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
                     self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] - self.andor.imagearray[
                                                                                 0:self.andor.width - 1], )
 
-                QtCore.QCoreApplication.processEvents()
+                QCoreApplication.processEvents()
 
         elif self.acquiring is True:
             self.acquiring = False
@@ -215,14 +219,14 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             post.status(self, 'ScanCARS can now be safely closed.')
             toggle.deactivate_buttons(self)
 
-        self.isoplane.close()
+        # self.isoplane.close()
 
     # CameraTemp: defining methods
     def cameratemp_cooler(self):
         # Checking to see if the cooler is on or off
-        messageIsCoolerOn = self.andor.iscooleron()
-        if messageIsCoolerOn != 'DRV_SUCCESS':
-            post.eventlog(self, 'Andor: IsCoolerOn error. ' + messageIsCoolerOn)
+        message_iscooleron = self.andor.iscooleron()
+        if message_iscooleron != 'DRV_SUCCESS':
+            post.eventlog(self, 'Andor: IsCoolerOn error. ' + message_iscooleron)
 
         else:
             if self.andor.coolerstatus == 0:
@@ -261,10 +265,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         wavelength_no = grating.get_nm(self.isoplane)
 
         if self.grating150.isChecked() and grating_no == 2:
-            grating.set_grating(self.isoplane, 2)
+            grating.set_grating(self.isoplane, 3)
 
         elif self.grating600.isChecked() and grating_no == 3:
-            grating.set_grating(self.isoplane, 3)
+            grating.set_grating(self.isoplane, 2)
 
         if int(self.gratingRequiredWavelength.text()) != wavelength_no:
             grating.set_nm(self.isoplane, int(self.gratingRequiredWavelength.text()))
@@ -357,8 +361,12 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.specwinPrevious.plot(acquired_data[512:1023] - acquired_data[0:511], pen='w')
 
         # # Saving the data to file
+        now = datetime.datetime.now()
+        newpath = 'C:\\Users\\CARS\\Documents\\SIPCARS\\Data\\' + now.strftime('%Y-%m-%d') + '\\'
+        if not os.path.exists(newpath):
+            os.makedirs(newpath)
         filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
-                                               directory='C:\\Users\\CARS\\Documents\\LabVIEW Data\\CARS data files\\priyank\\new software')
+                                               directory=newpath)
 
         if filename[0]:
             acqproperties = savetofile.EmptyClass()
@@ -406,8 +414,8 @@ def main():
     dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.HighlightedText, Qt.white)
     dark_palette.setColor(QPalette.Active, QPalette.Button, QColor(33, 33, 33))
-    dark_palette.setColor(QPalette.Disabled, QPalette.Button, QColor(23, 23, 23))
-    dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(130, 130, 130))
+    dark_palette.setColor(QPalette.Disabled, QPalette.Button, QColor(20, 20, 20))
+    dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(120, 120, 120))
     app.setPalette(dark_palette)
 
     form = ScanCARS()
