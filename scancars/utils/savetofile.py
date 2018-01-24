@@ -1,6 +1,6 @@
-import h5py, time
-import numpy as np
-from PyQt5.QtWidgets import QFileDialog
+import h5py
+import time
+
 """
 INTERNAL
 Note that saving to .h5 will increase the size of the file compared to the custom .cars binary file.
