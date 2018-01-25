@@ -4,6 +4,7 @@ import time
 import datetime
 import ctypes
 import pyvisa
+import nidaqmx as daq
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -14,7 +15,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactor
 from scancars.gui import dialogs
 from scancars.gui.forms import main
 from scancars.gui.css import setstyle
-from scancars.threads import uithreads#, grating
+from scancars.threads import uithreads, gratingthread
 from scancars.utils import post, toggle, savetofile
 from scancars.sdk.andor import pyandor
 
@@ -38,6 +39,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.acquiring = False
         self.spectralacquiring = False
         self.hyperacquiring = False
+        self.camtrackacquiring = False
         self.gettingtemp = False
 
         # Storing exposure times
@@ -79,10 +81,17 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.initialize_andor()
         self.width = self.andor.width
 
-        # Initialising the PI Isoplane
-        # self.isoplane = None
-        # self.initialize_isoplane()
-        self.buttonGratingUpdate.setDisabled(True)
+        # Initialising the PI Isoplane if it is able to connect
+        try:
+            from scancars.threads import grating
+            self.grating = grating
+            self.isoplane = None
+            self.initialize_isoplane()
+
+        except OSError as error:
+            self.buttonGratingUpdate.setDisabled(True)
+            post.eventlog(self, 'Isoplane: Could not connect. Possibly being used in another process.')
+            print(error)
 
         # Misc
         self.progressbar.setValue(0)
@@ -133,14 +142,22 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     def initialize_isoplane(self):
         rm = pyvisa.ResourceManager()
-        self.isoplane = rm.open_resource('ASRL4::INSTR')
-        self.isoplane.timeout = 20
-        self.isoplane.baud_rate = 9600
+        try:
+            self.isoplane = rm.open_resource('ASRL4::INSTR')
+            self.isoplane.timeout = 300000
+            self.isoplane.baud_rate = 9600
 
-        self.isoplane.read_termination = '\r'
-        self.isoplane.write_termination = '\r'
+            self.isoplane.read_termination = ' ok\r\n'
+            self.isoplane.write_termination = '\r'
 
-        post.eventlog(self, 'Isoplane: Connected.')
+            self.finished_grating_query()
+
+            post.eventlog(self, 'Isoplane: Connected.')
+
+        except pyvisa.errors.VisaIOError as error:
+            self.buttonGratingUpdate.setDisabled(True)
+            post.eventlog(self, 'Isoplane: Could not connect. Possibly being used in another process.')
+            print(error)
 
     # Main: defining methods
     def main_startacq(self):
@@ -211,7 +228,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             while self.andor.temperature < -20:
                 time.sleep(3)
                 self.andor.gettemperature()
-                QtCore.QCoreApplication.processEvents()
+                QCoreApplication.processEvents()
 
             self.andor.shutdown()
 
@@ -261,24 +278,92 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # Grating: defining methods
     def grating_update(self):
-        grating_no = grating.get_grating(self.isoplane)
-        wavelength_no = grating.get_nm(self.isoplane)
+        self.isoplane.clear()
+        grating_no = self.isoplane.ask('?GRATING')
+        grating_no = int(grating_no[1])
+
+        self.isoplane.clear()
+        wavelength_no = self.isoplane.ask('?NM')
+        wavelength_no = round(float(wavelength_no[0:-3]))
 
         if self.grating150.isChecked() and grating_no == 2:
-            grating.set_grating(self.isoplane, 3)
+            setgrating = gratingthread.GratingThread(self.isoplane, query='grating', value=3)
+            self.threadpool.start(setgrating)
+            message = 'Isoplane: Grating set to 150 lines/mm'
+            setgrating.signals.finished.connect(lambda: self.finished_grating_query(message))
 
         elif self.grating600.isChecked() and grating_no == 3:
-            grating.set_grating(self.isoplane, 2)
+            setgrating = gratingthread.GratingThread(self.isoplane, query='grating', value=2)
+            self.threadpool.start(setgrating)
+            message = 'Isoplane: Grating set to 600 lines/mm'
+            setgrating.signals.finished.connect(lambda: self.finished_grating_query(message))
 
         if int(self.gratingRequiredWavelength.text()) != wavelength_no:
-            grating.set_nm(self.isoplane, int(self.gratingRequiredWavelength.text()))
+            reqwavelength = int(self.gratingRequiredWavelength.text())
+            setwavelength = gratingthread.GratingThread(self.isoplane, query='wavelength', value=reqwavelength)
+            self.threadpool.start(setwavelength)
+            message = 'Isoplane: Wavelength set to ' + str(reqwavelength) + ' nm'
+            setwavelength.signals.finished.connect(lambda: self.finished_grating_query(message))
+
+    def finished_grating_query(self, message=None):
+        self.isoplane.clear()
+        grating_no = self.isoplane.ask('?GRATING')
+        grating_no = int(grating_no[1])
+
+        self.isoplane.clear()
+        wavelength_no = self.isoplane.ask('?NM')
+        wavelength_no = round(float(wavelength_no[0:-3]))
+
+        if self.grating150.isChecked() and grating_no == 2:
+            self.grating600.setChecked(True)
+
+        elif self.grating600.isChecked() and grating_no == 3:
+            self.grating150.setChecked(True)
+
+        self.gratingActualWavelength.setText(str(wavelength_no))
+
+        if message is not None:
+            post.eventlog(self, message)
 
     # CamTracks: Defining methods
     def camtracks_update(self):
-        pass
+        # Reading in the required track position values from the gui
+        randtrack = np.array([int(float(self.camtrackLower1.text())),
+                              int(float(self.camtrackUpper1.text())),
+                              int(float(self.camtrackLower2.text())),
+                              int(float(self.camtrackUpper2.text()))])
+
+        # Setting the random track positions on the camera
+        errormessage = self.andor.setrandomtracks(2, randtrack)
+
+        # Checking to make sure that the camera has successfully set the random tracks
+        if errormessage != 'DRV_SUCCESS':
+            post.eventlog(self, 'Andor: SetRandomTracks error. ' + errormessage)
+
+        else:
+            post.eventlog(self, 'Andor: Random track positions updated.')
 
     def camtracks_view(self):
-        pass
+        # Setting the read mode to image to get a full image from the CCD chip
+        self.andor.setacquisitionmode(1)
+        self.andor.setreadmode(4)
+        self.andor.setexposuretime(0.1)
+
+        cimage = (ctypes.c_long * self.andor.height * self.andor.width)()
+
+        if self.camtrackacquiring is False:
+            self.camtrackacquiring = True
+            while self.camtrackacquiring:
+                self.andor.startacquisition()
+                self.andor.waitforacquisition()
+                self.andor.getacquireddata(cimage, 1)
+
+                self.imagewinMain.setImage(self.andor.imagearray)
+
+                QCoreApplication.processEvents()
+
+        elif self.camtrackacquiring is True:
+            self.camtrackacquiring = False
 
     # SpectralAcq: Defining methods
     def spectralacq_update(self):
@@ -324,6 +409,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.progressbar.setValue((numscan + 1) / (darkcount + frames) * 100)
             numscan += 1
 
+            QCoreApplication.processEvents()
+
         dark_data = np.asarray(dark_data)
         dark_data = np.transpose(dark_data)
 
@@ -345,6 +432,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
             self.progressbar.setValue((darkcount + numscan + 1) / (darkcount + frames) * 100)
             numscan += 1
+
+            QCoreApplication.processEvents()
 
         spectral_data = np.asarray(spectral_data)
         spectral_data = np.transpose(spectral_data)
@@ -391,7 +480,15 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         toggle.activate_buttons(self)
 
     def hyperacq_start(self):
-        pass
+        x_required = self.hyperspectralXPix
+        y_required = self.hyperspectralYPix
+        z_required = self.hyperspectralZPix
+
+        xystep_required = self.hyperspectralXYStep
+        zstep_required = self.hyperspectralZStep
+
+        exposuretime = self.hyperspectralRequiredTime
+        background_frames = self.hyperspectralBackgroundFrames
 
 
 def main():
@@ -427,3 +524,4 @@ def main():
 # If the file is run directly and not imported, this runs the main function
 if __name__ == '__main__':
     main()
+sys.exit(1)
