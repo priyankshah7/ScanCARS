@@ -236,7 +236,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
                     QCoreApplication.processEvents()
 
-            # Plotting to the main graph and the Ind. Track dialog
+            # Plotting to the main graph and the Difference dialog
             elif self.winspecdiff.isVisible() and not self.winspecsum.isVisible():
                 while self.acquiring:
                     self.andor.startacquisition()
