@@ -6,16 +6,24 @@
 *Description: Hyperspectral image acquisition software*
 
 ### Description
-This interactive GUI-based software is built to acquire hyperspectral
+This GUI software is built to acquire hyperspectral
 data in a microscope-based experimental setup. It's original 
 purpose is to acquire spectral interferometric polarized coherent 
 anti-Stokes Raman spectroscopy (SIPCARS) hyperspectral data.
 
-Hyperspectral acquisition using ScanCARS requires an Andor scientific camera
-and an open-loop configured microscope stage controlled using a NI DAQ card 
-(though an ADwin software development kit is also provided). ScanCARS is
-currently only configured to work on Windows, however it can easily be modified
-to work on Linux/Mac OS if the relevant Andor driver has been purchased.
+Hyperspectral acquisition using ScanCARS requires an Andor scientific camera, an 
+open-loop configured microscope stage controlled using a NI DAQ card and a Princeton
+Instruments Isoplane spectrometer.
+
+### Platform and instrument models 
+ScanCARS is only configured to work with Windows, though the code can be modified
+to work with linux/macOS provided that the relevant Andor driver has been purchased.
+The software has been tested with the following instrument models:
++ Andor iXon 897 and Andor Newton DUP920 <br />
+Controlled using a custom python API to the Andor SDK <br />
+
++ Princeton Instruments Isoplane SCT-320 <br />
+Controlled by treating the USB connection as a COM port
 
 ### Requirements
 ScanCARS is Qt based and written in python. An API to the Andor software development
@@ -24,7 +32,7 @@ has been modified from [here](https://github.com/hamidohadi/pyandor). The openly
 available **nidaqmx** package developed by NI is not provided but can be acquired 
 from [here](https://github.com/ni/nidaqmx-python). 
 
-The following python packages are also required:
+The following python packages are required:
 + numpy
 + pyqtgraph
 + PyQt5
