@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow
 
-from scancars.gui.forms import camera, specsum, spectracks
+from scancars.gui.forms import camera, winspecsum, winspecdiff
 
 
 class CAMERA(QMainWindow, camera.Ui_Dialog):
@@ -9,13 +9,13 @@ class CAMERA(QMainWindow, camera.Ui_Dialog):
         self.setupUi(self)
 
 
-class SPECTRACKS(QMainWindow, spectracks.Ui_Dialog):
+class SPECDIFF(QMainWindow, winspecdiff.Ui_MainWindow):
     def __init__(self, parent=None):
-        super(SPECTRACKS, self).__init__(parent)
+        super(SPECDIFF, self).__init__(parent)
         self.setupUi(self)
 
 
-class SPECSUM(QMainWindow, specsum.Ui_Dialog):
+class SPECSUM(QMainWindow, winspecsum.Ui_MainWindow):
     def __init__(self, parent=None):
         super(SPECSUM, self).__init__(parent)
         self.setupUi(self)
