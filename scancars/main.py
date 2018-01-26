@@ -27,7 +27,6 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO If speed becomes an issue, consider using numba package with jit decorator
-        # Required to use maths functions instead of numpy
 
         # -------STARTUP PROCESSES ---------------------------------------------------------
 
@@ -61,8 +60,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # Creating variables to store instances of the camera and track/sum dialogs
         self.wincamera = None
-        self.winspectracks = None
-        self.winspecsum = None
+        self.winspecsum = dialogs.SPECSUM()
+        self.winspecsum.setWindowTitle('Sum Track Spectrum')
+        self.winspecdiff = dialogs.SPECDIFF()
+        self.winspecdiff.setWindowTitle('Difference Track Spectrum')
 
         # Connecting buttons to methods
         self.buttonMainStartAcquisition.clicked.connect(lambda: self.main_startacq())
@@ -172,6 +173,11 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             track2plot = self.specwinMain.plot(pen=(25, 85, 120), name='track2')
             diffplot = self.specwinMain.plot(pen='w', name='trackdiff')
 
+            self.winspecsum.specwinSum.clear()
+            sumdialogplot = self.winspecsum.specwinSum.plot(pen=(25, 85, 120), name='sum')
+            self.winspecdiff.specwinDiff.clear()
+            diffdialogplot = self.winspecdiff.specwinDiff.plot(pen=(25, 85, 120), name='difference')
+
             cimage = (ctypes.c_int * self.andor.dim)()
 
             self.andor.freeinternalmemory()
@@ -179,18 +185,73 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.setshutter(1, 1, 0, 0)
             self.andor.setexposuretime(self.exposuretime)
 
-            while self.acquiring:
-                self.andor.startacquisition()
-                self.andor.waitforacquisition()
-                self.andor.getacquireddata(cimage)
+            # Plotting just to the main graph if the two plot dialogs are not open
+            if not (self.winspecsum.isVisible() and self.winspecdiff.isVisible()):
+                while self.acquiring:
+                    self.andor.startacquisition()
+                    self.andor.waitforacquisition()
+                    self.andor.getacquireddata(cimage)
 
-                track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
-                track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
-                diffplot.setData(
-                    self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] - self.andor.imagearray[
-                                                                                0:self.andor.width - 1], )
+                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
+                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
+                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                     self.andor.imagearray[0:self.andor.width - 1])
 
-                QCoreApplication.processEvents()
+                    QCoreApplication.processEvents()
+
+            # Plotting to the main graph and the two dialogs
+            elif self.winspecsum.isVisible() and self.winspecsum.isVisible():
+                while self.acquiring:
+                    self.andor.startacquisition()
+                    self.andor.waitforacquisition()
+                    self.andor.getacquireddata(cimage)
+
+                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
+                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
+                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                     self.andor.imagearray[0:self.andor.width - 1])
+
+                    sumdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] +
+                                          self.andor.imagearray[0:self.andor.width - 1])
+
+                    diffdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                           self.andor.imagearray[0:self.andor.width - 1])
+
+                    QCoreApplication.processEvents()
+
+            # Plotting to the main graph and the Sum dialog
+            elif self.winspecsum.isVisible() and not self.winspecdiff.isVisible():
+                while self.acquiring:
+                    self.andor.startacquisition()
+                    self.andor.waitforacquisition()
+                    self.andor.getacquireddata(cimage)
+
+                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
+                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
+                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                     self.andor.imagearray[0:self.andor.width - 1])
+
+                    sumdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] +
+                                          self.andor.imagearray[0:self.andor.width - 1])
+
+                    QCoreApplication.processEvents()
+
+            # Plotting to the main graph and the Ind. Track dialog
+            elif self.winspecdiff.isVisible() and not self.winspecsum.isVisible():
+                while self.acquiring:
+                    self.andor.startacquisition()
+                    self.andor.waitforacquisition()
+                    self.andor.getacquireddata(cimage)
+
+                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
+                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
+                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                     self.andor.imagearray[0:self.andor.width - 1])
+
+                    diffdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                           self.andor.imagearray[0:self.andor.width - 1])
+
+                    QCoreApplication.processEvents()
 
         elif self.acquiring is True:
             self.acquiring = False
@@ -271,13 +332,14 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # Dialogs: defining methods
     def dialog_sum(self):
-        pass
+        self.winspecsum.show()
 
     def dialog_diff(self):
-        pass
+        self.winspecdiff.show()
 
     # Grating: defining methods
     def grating_update(self):
+        post.eventlog(self, 'Isoplane: Updating...')
         self.isoplane.clear()
         grating_no = self.isoplane.ask('?GRATING')
         grating_no = int(grating_no[1])
