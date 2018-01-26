@@ -19,7 +19,7 @@ Instruments Isoplane spectrometer.
 ScanCARS is only configured to work with Windows, though the code can be modified
 to work with linux/macOS provided that the relevant Andor driver has been purchased.
 The software has been tested with the following instrument models:
-+ Andor iXon 897 and Andor Newton DUP920 <br />
++ Andor iXon 897 and Andor Newton DU920P <br />
 Controlled using a custom python API to the Andor SDK <br />
 
 + Princeton Instruments Isoplane SCT-320 <br />
