@@ -47,6 +47,6 @@ multidimensional data.
 + Hyperspectral data: *.h5 file*
 
 ### Screenshot
-[!Screenshot](/scancars/resources/screenshot.png)
+[!Screenshot](/scancars/resources/screenshot.png?raw=true)
 
 
