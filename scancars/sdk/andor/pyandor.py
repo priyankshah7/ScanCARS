@@ -10,6 +10,7 @@ dll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d"
 class Cam:
     def __init__(self):
         self.width = None
+        self.height = None
         self.temperature = None
         self.coolerstatus = None
         self.exposure = None
@@ -417,6 +418,7 @@ class Cam:
 
         error = dll.GetDetector(ctypes.byref(cw), ctypes.byref(ch))
         self.width = cw.value
+        self.height = ch.value
         return ERROR_CODE[error]
 
     def setrandomtracks(self, numtracks, areas):

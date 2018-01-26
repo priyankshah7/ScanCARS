@@ -1,7 +1,6 @@
-import time, ctypes
+import time
+import ctypes
 import multiprocessing as mp
-import numpy as np
-import pyqtgraph as pg
 from PyQt5 import QtCore
 
 from scancars.utils import toggle, post
