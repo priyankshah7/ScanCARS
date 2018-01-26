@@ -46,4 +46,7 @@ multidimensional data.
 + Spectral data: *.h5 file*
 + Hyperspectral data: *.h5 file*
 
+### Screenshot
+[!Screenshot](/screenshot.png)
+
 
