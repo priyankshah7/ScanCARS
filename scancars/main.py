@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactor
 from scancars.gui import dialogs
 from scancars.gui.forms import main
 from scancars.gui.css import setstyle
-from scancars.threads import uithreads, gratingthread
+from scancars.threads import grating, liveacquire, monitortemp
 from scancars.utils import post, toggle, savetofile
 from scancars.sdk.andor import pyandor
 
@@ -59,7 +59,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.imagewinMain.ui.menuBtn.hide()
 
         # Creating variables to store instances of the camera and track/sum dialogs
-        self.wincamera = None
+        self.wincamera = dialogs.CAMERA()
+        self.wincamera.setWindowTitle('Live CCD View')
         self.winspecsum = dialogs.SPECSUM()
         self.winspecsum.setWindowTitle('Sum Track Spectrum')
         self.winspecdiff = dialogs.SPECDIFF()
@@ -83,16 +84,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.width = self.andor.width
 
         # Initialising the PI Isoplane if it is able to connect
-        try:
-            from scancars.threads import grating
-            self.grating = grating
-            self.isoplane = None
-            self.initialize_isoplane()
-
-        except OSError as error:
-            self.buttonGratingUpdate.setDisabled(True)
-            post.eventlog(self, 'Isoplane: Could not connect. Possibly being used in another process.')
-            print(error)
+        self.isoplane = None
+        self.initialize_isoplane()
 
         # Misc
         self.progressbar.setValue(0)
@@ -138,7 +131,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # Starting the temperature thread to monitor the temperature of the camera
         self.gettingtemp = True
-        gettemperature = uithreads.TemperatureThread(self)
+        gettemperature = monitortemp.MonitorTemperatureThread(self)
         self.threadpool.start(gettemperature)
 
     def initialize_isoplane(self):
@@ -162,12 +155,17 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     # Main: defining methods
     def main_startacq(self):
+        # Creating an instance of the live acquisition thread
+        acquirethread = liveacquire.LiveAcquireThread(self)
+
+        # If there's no current live acquisition taking place, then start one
         if self.acquiring is False:
             self.acquiring = True
             toggle.deactivate_buttons(self, main_start_acq_stat=True)
             post.status(self, 'Acquiring...')
             self.buttonMainStartAcquisition.setText('Stop Acquisition')
 
+            # Clearing any current data on any of the graphs
             self.specwinMain.clear()
             track1plot = self.specwinMain.plot(pen=(190, 70, 45), name='track1')
             track2plot = self.specwinMain.plot(pen=(25, 85, 120), name='track2')
@@ -178,83 +176,34 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.winspecdiff.specwinDiff.clear()
             diffdialogplot = self.winspecdiff.specwinDiff.plot(pen=(25, 85, 120), name='difference')
 
-            cimage = (ctypes.c_int * self.andor.dim)()
-
+            # Camera parameters from live acquisition
             self.andor.freeinternalmemory()
             self.andor.setacquisitionmode(1)
             self.andor.setshutter(1, 1, 0, 0)
             self.andor.setexposuretime(self.exposuretime)
 
-            # Plotting just to the main graph if the two plot dialogs are not open
-            if not (self.winspecsum.isVisible() and self.winspecdiff.isVisible()):
-                while self.acquiring:
-                    self.andor.startacquisition()
-                    self.andor.waitforacquisition()
-                    self.andor.getacquireddata(cimage)
+            # Starting live acquisition thread and connecting to plot function
+            self.threadpool.start(acquirethread)
+            acquirethread.signals.dataLiveAcquire.connect(lambda: plot())
 
-                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
-                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
-                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
-                                     self.andor.imagearray[0:self.andor.width - 1])
+            def plot():
+                track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
+                track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
+                diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                 self.andor.imagearray[0:self.andor.width - 1])
 
-                    QCoreApplication.processEvents()
+                sumdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] +
+                                      self.andor.imagearray[0:self.andor.width - 1])
 
-            # Plotting to the main graph and the two dialogs
-            elif self.winspecsum.isVisible() and self.winspecsum.isVisible():
-                while self.acquiring:
-                    self.andor.startacquisition()
-                    self.andor.waitforacquisition()
-                    self.andor.getacquireddata(cimage)
+                diffdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
+                                       self.andor.imagearray[0:self.andor.width - 1])
 
-                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
-                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
-                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
-                                     self.andor.imagearray[0:self.andor.width - 1])
+                QCoreApplication.processEvents()
 
-                    sumdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] +
-                                          self.andor.imagearray[0:self.andor.width - 1])
-
-                    diffdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
-                                           self.andor.imagearray[0:self.andor.width - 1])
-
-                    QCoreApplication.processEvents()
-
-            # Plotting to the main graph and the Sum dialog
-            elif self.winspecsum.isVisible() and not self.winspecdiff.isVisible():
-                while self.acquiring:
-                    self.andor.startacquisition()
-                    self.andor.waitforacquisition()
-                    self.andor.getacquireddata(cimage)
-
-                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
-                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
-                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
-                                     self.andor.imagearray[0:self.andor.width - 1])
-
-                    sumdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] +
-                                          self.andor.imagearray[0:self.andor.width - 1])
-
-                    QCoreApplication.processEvents()
-
-            # Plotting to the main graph and the Difference dialog
-            elif self.winspecdiff.isVisible() and not self.winspecsum.isVisible():
-                while self.acquiring:
-                    self.andor.startacquisition()
-                    self.andor.waitforacquisition()
-                    self.andor.getacquireddata(cimage)
-
-                    track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
-                    track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
-                    diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
-                                     self.andor.imagearray[0:self.andor.width - 1])
-
-                    diffdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
-                                           self.andor.imagearray[0:self.andor.width - 1])
-
-                    QCoreApplication.processEvents()
-
+        # If there's a live acquisition taking place, then stop it
         elif self.acquiring is True:
             self.acquiring = False
+            acquirethread.stop()
             toggle.activate_buttons(self)
             post.status(self, '')
             self.buttonMainStartAcquisition.setText('Start Acquisition')
@@ -349,20 +298,20 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         wavelength_no = round(float(wavelength_no[0:-3]))
 
         if self.grating150.isChecked() and grating_no == 2:
-            setgrating = gratingthread.GratingThread(self.isoplane, query='grating', value=3)
+            setgrating = grating.GratingThread(self.isoplane, query='grating', value=3)
             self.threadpool.start(setgrating)
             message = 'Isoplane: Grating set to 150 lines/mm'
             setgrating.signals.finished.connect(lambda: self.finished_grating_query(message))
 
         elif self.grating600.isChecked() and grating_no == 3:
-            setgrating = gratingthread.GratingThread(self.isoplane, query='grating', value=2)
+            setgrating = grating.GratingThread(self.isoplane, query='grating', value=2)
             self.threadpool.start(setgrating)
             message = 'Isoplane: Grating set to 600 lines/mm'
             setgrating.signals.finished.connect(lambda: self.finished_grating_query(message))
 
         if int(self.gratingRequiredWavelength.text()) != wavelength_no:
             reqwavelength = int(self.gratingRequiredWavelength.text())
-            setwavelength = gratingthread.GratingThread(self.isoplane, query='wavelength', value=reqwavelength)
+            setwavelength = grating.GratingThread(self.isoplane, query='wavelength', value=reqwavelength)
             self.threadpool.start(setwavelength)
             message = 'Isoplane: Wavelength set to ' + str(reqwavelength) + ' nm'
             setwavelength.signals.finished.connect(lambda: self.finished_grating_query(message))
@@ -418,8 +367,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             while self.camtrackacquiring:
                 self.andor.startacquisition()
                 self.andor.waitforacquisition()
-                self.andor.getacquireddata(cimage, 1)
+                self.andor.getacquireddata(cimage, numscans=1, acqtype='image')
 
+                self.imagewinMain.clear()
                 self.imagewinMain.setImage(self.andor.imagearray)
 
                 QCoreApplication.processEvents()

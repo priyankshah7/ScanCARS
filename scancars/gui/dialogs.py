@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QMainWindow
 
-from scancars.gui.forms import camera, winspecsum, winspecdiff
+from scancars.gui.forms import wincamera, winspecsum, winspecdiff
 
 
-class CAMERA(QMainWindow, camera.Ui_Dialog):
+class CAMERA(QMainWindow, wincamera.Ui_MainWindow):
     def __init__(self, parent=None):
         super(CAMERA, self).__init__(parent)
         self.setupUi(self)
