@@ -28,6 +28,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
         # TODO If speed becomes an issue, consider using numba package with jit decorator
+        # NOTE To build, run: pyinstaller --onefile --windowed main.spec
 
         # ------- STARTUP PROCESSES ---------------------------------------------------------
 
@@ -214,6 +215,14 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     def main_shutdown(self):
         toggle.deactivate_buttons(self)
+
+        # Saving the event logger contents to a textfile
+        now = datetime.datetime.now()
+        newpath = 'C:\\Users\\CARS\\Documents\\SIPCARS\\Data\\' + now.strftime('%Y-%m-%d') + '\\'
+        if not os.path.exists(newpath):
+            os.makedirs(newpath)
+        with open(newpath + 'eventlog--' + now.strftime('%H-%M-%S') + '.txt', 'w') as eventfile:
+            eventfile.write(str(self.eventLogger.toPlainText()))
 
         # Ensuring all acquiring and temperature loops have been stopped
         self.acquiring = False
