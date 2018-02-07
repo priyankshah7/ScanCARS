@@ -30,3 +30,6 @@ class LiveAcquireThread(QtCore.QRunnable):
             self.ui.andor.getacquireddata(self.cimage)
 
             self.signals.dataLiveAcquire.emit()
+
+        else:
+            self.ui.andor.setshutter(1, 2, 0, 0)
