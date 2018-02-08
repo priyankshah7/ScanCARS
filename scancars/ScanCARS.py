@@ -48,8 +48,6 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.darkexposure = 0.1
 
         # Creating variables to store instances of the camera and track/sum dialogs
-        self.wincamera = dialogs.CAMERA()
-        self.wincamera.setWindowTitle('Live CCD View')
         self.winspecsum = dialogs.SPECSUM()
         self.winspecsum.setWindowTitle('Sum Track Spectrum')
         self.winspecdiff = dialogs.SPECDIFF()
@@ -58,8 +56,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # Plot/Image settings
         self.specwinMain.plotItem.showGrid(x=True, y=True, alpha=0.2)
         self.specwinPrevious.plotItem.showGrid(x=True, y=True, alpha=0.2)
-        self.specwinMain.setXRange(-10, 520, padding=0)
-        self.specwinPrevious.setXRange(-10, 520, padding=0)
+        self.specwinMain.setXRange(-10, 530, padding=0)
+        self.specwinPrevious.setXRange(-10, 530, padding=0)
         self.specwinMain.plotItem.setMenuEnabled(False)
         self.specwinPrevious.plotItem.setMenuEnabled(False)
         self.imagewinMain.ui.histogram.setMinimumWidth(10)
@@ -190,16 +188,16 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             acquirethread.signals.dataLiveAcquire.connect(lambda: plot())
 
             def plot():
-                self.track1plot.setData(self.andor.imagearray[0:self.andor.width - 1])
-                self.track2plot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1])
+                self.track1plot.setData(self.andor.imagearray[0:self.width - 1])
+                self.track2plot.setData(self.andor.imagearray[self.width:(2 * self.width) - 1])
                 self.diffplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
                                       self.andor.imagearray[0:self.andor.width - 1])
 
-                self.sumdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] +
-                                           self.andor.imagearray[0:self.andor.width - 1])
+                self.sumdialogplot.setData(self.andor.imagearray[self.width:(2 * self.width) - 1] +
+                                           self.andor.imagearray[0:self.width - 1])
 
-                self.diffdialogplot.setData(self.andor.imagearray[self.andor.width:(2 * self.andor.width) - 1] -
-                                            self.andor.imagearray[0:self.andor.width - 1])
+                self.diffdialogplot.setData(self.andor.imagearray[self.width:(2 * self.width) - 1] -
+                                            self.andor.imagearray[0:self.width - 1])
 
                 QCoreApplication.processEvents()
 
@@ -261,16 +259,16 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             post.status(self, 'ScanCARS can now be safely closed.')
 
-    def closeEvent(self, a0: QtGui.QCloseEvent):
+    def closeEvent(self, event):
         # Method to carry out operations upon closing the main window
         self.andor.iscooleron()
-        if self.andor.coolerstatus == 1:
-            # QtGui.QCloseEvent.ignore()  # FIXME
+        error_setshutter = self.andor.setshutter(1, 2, 0, 0)
+        if self.andor.coolerstatus == 1 or error_setshutter == 'DRV_SUCCESS':
+            event.ignore()
             post.eventlog(self, 'ScanCARS needs to SHUTDOWN first.')
 
         else:
-            if self.wincamera.isVisible() or self.winspecsum.isVisible() or self.winspecdiff.isVisible():
-                self.wincamera.close()
+            if self.winspecsum.isVisible() or self.winspecdiff.isVisible():
                 self.winspecsum.close()
                 self.winspecdiff.close()
 
@@ -452,9 +450,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.getacquireddata(cimage, 1)
             dark_data[numscan] = self.andor.imagearray
 
-            self.track1plot.setData(self.andor.imagearray[0:511])
-            self.track2plot.setData(self.andor.imagearray[512:1023])
-            self.diffplot.setData(self.andor.imagearray[512:1023]-self.andor.imagearray[0:511])
+            self.track1plot.setData(self.andor.imagearray[0:self.width-1])
+            self.track2plot.setData(self.andor.imagearray[self.width:(2*self.width)-1])
+            self.diffplot.setData(
+                self.andor.imagearray[self.width:(2*self.width)-1]-self.andor.imagearray[0:self.width-1])
 
             self.progressbar.setValue((numscan + 1) / (darkcount + frames) * 100)
             numscan += 1
@@ -480,9 +479,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.andor.getacquireddata(cimage, 1)
             spectral_data[numscan] = self.andor.imagearray
 
-            self.track1plot.setData(self.andor.imagearray[0:511])
-            self.track2plot.setData(self.andor.imagearray[512:1023])
-            self.diffplot.setData(self.andor.imagearray[512:1023] - self.andor.imagearray[0:511])
+            self.track1plot.setData(self.andor.imagearray[0:self.width - 1])
+            self.track2plot.setData(self.andor.imagearray[self.width:(2 * self.width) - 1])
+            self.diffplot.setData(
+                self.andor.imagearray[self.width:(2 * self.width) - 1] - self.andor.imagearray[0:self.width - 1])
 
             self.progressbar.setValue((darkcount + numscan + 1) / (darkcount + frames) * 100)
             numscan += 1
@@ -495,11 +495,11 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         acquired_data = np.mean(spectral_data, 1) - np.mean(dark_data, 1)
 
         # # Plotting the mean spectrum
-        self.track1plot.setData(acquired_data[0:511])
-        self.track2plot.setData(acquired_data[512:1023])
-        self.diffplot.setData(acquired_data[512:1023] - acquired_data[0:511])
+        self.track1plot.setData(acquired_data[0:self.width - 1])
+        self.track2plot.setData(acquired_data[self.width:(2 * self.width) - 1])
+        self.diffplot.setData(acquired_data[self.width:(2 * self.width) - 1] - acquired_data[0:self.width - 1])
 
-        self.previousplot.setData(acquired_data[512:1023] - acquired_data[0:511])
+        self.previousplot.setData(acquired_data[self.width:(2 * self.width) - 1] - acquired_data[0:self.width - 1])
 
         # # Saving the data to file
         now = datetime.datetime.now()
