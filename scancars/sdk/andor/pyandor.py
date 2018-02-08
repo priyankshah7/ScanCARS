@@ -4,7 +4,7 @@ import ctypes
 import numpy as np
 
 # Loading the Andor dll driver
-dll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor iXon\\Drivers\\atmcd64d")
+dll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor SDK\\atmcd64d")
 
 
 class Cam:
@@ -23,7 +23,7 @@ class Cam:
 
     @staticmethod
     def initialize():
-        error = dll.Initialize("C:\\Program Files\\Andor iXon")
+        error = dll.Initialize("C:\\Program Files\\Andor SDK")
         return ERROR_CODE[error]
 
     @staticmethod
