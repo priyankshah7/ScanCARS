@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -327,6 +327,7 @@ class Ui_MainWindow(object):
         self.groupBox_9.setObjectName("groupBox_9")
         self.formLayout_14 = QtWidgets.QFormLayout(self.groupBox_9)
         self.formLayout_14.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.formLayout_14.setHorizontalSpacing(1)
         self.formLayout_14.setObjectName("formLayout_14")
         self.grating150 = QtWidgets.QRadioButton(self.groupBox_9)
         self.grating150.setChecked(True)
@@ -338,9 +339,13 @@ class Ui_MainWindow(object):
         self.label_20 = QtWidgets.QLabel(self.groupBox_9)
         self.label_20.setObjectName("label_20")
         self.formLayout_14.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_20)
-        self.buttonGratingUpdate = QtWidgets.QPushButton(self.groupBox_9)
-        self.buttonGratingUpdate.setObjectName("buttonGratingUpdate")
-        self.formLayout_14.setWidget(4, QtWidgets.QFormLayout.SpanningRole, self.buttonGratingUpdate)
+        self.gratingRequiredWavelength = QtWidgets.QSpinBox(self.groupBox_9)
+        self.gratingRequiredWavelength.setAlignment(QtCore.Qt.AlignCenter)
+        self.gratingRequiredWavelength.setMinimum(300)
+        self.gratingRequiredWavelength.setMaximum(999)
+        self.gratingRequiredWavelength.setProperty("value", 682)
+        self.gratingRequiredWavelength.setObjectName("gratingRequiredWavelength")
+        self.formLayout_14.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.gratingRequiredWavelength)
         self.label_17 = QtWidgets.QLabel(self.groupBox_9)
         self.label_17.setObjectName("label_17")
         self.formLayout_14.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_17)
@@ -349,13 +354,12 @@ class Ui_MainWindow(object):
         self.gratingActualWavelength.setReadOnly(True)
         self.gratingActualWavelength.setObjectName("gratingActualWavelength")
         self.formLayout_14.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.gratingActualWavelength)
-        self.gratingRequiredWavelength = QtWidgets.QSpinBox(self.groupBox_9)
-        self.gratingRequiredWavelength.setAlignment(QtCore.Qt.AlignCenter)
-        self.gratingRequiredWavelength.setMinimum(300)
-        self.gratingRequiredWavelength.setMaximum(999)
-        self.gratingRequiredWavelength.setProperty("value", 682)
-        self.gratingRequiredWavelength.setObjectName("gratingRequiredWavelength")
-        self.formLayout_14.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.gratingRequiredWavelength)
+        self.buttonGratingUpdate = QtWidgets.QPushButton(self.groupBox_9)
+        self.buttonGratingUpdate.setObjectName("buttonGratingUpdate")
+        self.formLayout_14.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.buttonGratingUpdate)
+        self.buttonGratingState = QtWidgets.QPushButton(self.groupBox_9)
+        self.buttonGratingState.setObjectName("buttonGratingState")
+        self.formLayout_14.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.buttonGratingState)
         self.gridLayout_4.addWidget(self.groupBox_9, 3, 4, 1, 1)
         self.groupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_2.setObjectName("groupBox_2")
@@ -537,8 +541,9 @@ class Ui_MainWindow(object):
         self.grating150.setText(_translate("MainWindow", "150 lines/mm"))
         self.grating600.setText(_translate("MainWindow", "600 lines/mm"))
         self.label_20.setText(_translate("MainWindow", "Req. λ (nm):"))
-        self.buttonGratingUpdate.setText(_translate("MainWindow", "Update"))
         self.label_17.setText(_translate("MainWindow", "Actual λ (nm):"))
+        self.buttonGratingUpdate.setText(_translate("MainWindow", "Update"))
+        self.buttonGratingState.setText(_translate("MainWindow", "Turn Off"))
         self.groupBox_2.setTitle(_translate("MainWindow", "Plot Tools"))
         self.groupBox_10.setTitle(_translate("MainWindow", "Camera Temperature"))
         self.buttonCameratempCooler.setText(_translate("MainWindow", "Cooler On"))
