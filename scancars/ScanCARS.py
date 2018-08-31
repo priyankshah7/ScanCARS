@@ -2,14 +2,14 @@ import os
 import sys
 import time
 import datetime
+import configparser
 import ctypes
 import pyvisa
 import nidaqmx as daq
 import numpy as np
-from PyQt5 import QtGui
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.Qt import QPalette, QColor
+from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactory
 
 from scancars.gui import dialogs
@@ -27,10 +27,31 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.setWindowTitle('ScanCARS')
 
         # TODO Add options to take individual pump/Stokes. Will depend on being able to code up some shutters.
-        # TODO If speed becomes an issue, consider using numba package with jit decorator
-        # NOTE To build, run: pyinstaller --onefile --windowed main.spec
+        # TODO Add control for the Nikon microscope with micro-manager
+
+        # NOTE To build, run: pyinstaller --onefile --windowed build.spec
 
         # ------- STARTUP PROCESSES ---------------------------------------------------------
+
+        # Retrieving config values
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        default_vals = config['DEFAULT']
+        self.camtrackLower1.setValue(default_vals.getint('camtrackLower1'))
+        self.camtrackUpper1.setValue(default_vals.getint('camtrackUpper1'))
+        self.camtrackLower2.setValue(default_vals.getint('camtrackLower2'))
+        self.camtrackUpper2.setValue(default_vals.getint('camtrackUpper2'))
+        self.spectralRequiredTime.setValue(default_vals.getfloat('spec_exposuretime'))
+        self.spectralBackgroundFrames.setValue(default_vals.getint('spec_background_frames'))
+        self.spectralFrames.setValue(default_vals.getint('spec_spectral_frames'))
+        self.hyperspectralRequiredTime.setValue(default_vals.getfloat('hyp_exposuretime'))
+        self.hyperspectralBackgroundFrames.setValue(default_vals.getint('hyp_background_frames'))
+        self.hyperspectralXPix.setValue(default_vals.getint('num_x_pix'))
+        self.hyperspectralYPix.setValue(default_vals.getint('num_y_pix'))
+        self.hyperspectralZPix.setValue(default_vals.getint('num_z_pix'))
+        self.hyperspectralXYStep.setValue(default_vals.getfloat('xy_step'))
+        self.hyperspectralZStep.setValue(default_vals.getfloat('z_step'))
+        self.cameratempRequiredTemp.setValue(default_vals.getint('temp'))
 
         # Initiating instances of a threadpool and the Andor class
         self.threadpool = QtCore.QThreadPool()
