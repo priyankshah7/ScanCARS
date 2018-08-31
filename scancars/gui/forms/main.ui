@@ -706,6 +706,9 @@ Plot</string>
            <property name="formAlignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
+           <property name="horizontalSpacing">
+            <number>1</number>
+           </property>
            <item row="0" column="0" colspan="2">
             <widget class="QRadioButton" name="grating150">
              <property name="text">
@@ -730,10 +733,19 @@ Plot</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QPushButton" name="buttonGratingUpdate">
-             <property name="text">
-              <string>Update</string>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="gratingRequiredWavelength">
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="minimum">
+              <number>300</number>
+             </property>
+             <property name="maximum">
+              <number>999</number>
+             </property>
+             <property name="value">
+              <number>682</number>
              </property>
             </widget>
            </item>
@@ -754,19 +766,17 @@ Plot</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QSpinBox" name="gratingRequiredWavelength">
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
+           <item row="4" column="0">
+            <widget class="QPushButton" name="buttonGratingUpdate">
+             <property name="text">
+              <string>Update</string>
              </property>
-             <property name="minimum">
-              <number>300</number>
-             </property>
-             <property name="maximum">
-              <number>999</number>
-             </property>
-             <property name="value">
-              <number>682</number>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QPushButton" name="buttonGratingState">
+             <property name="text">
+              <string>Turn Off</string>
              </property>
             </widget>
            </item>
@@ -954,7 +964,7 @@ Plot</string>
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header location="global">pyqtgraph</header>
+   <header>pyqtgraph</header>
   </customwidget>
   <customwidget>
    <class>ImageView</class>

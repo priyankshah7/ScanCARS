@@ -29,8 +29,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
                 time.strftime('%d/%m/%Y') + ':' + time.strftime("%H:%M:%S"))
 
     elif acqtype == 'hyperspectral':
-        track1 = data[0:acqproperties.width - 1, :, :, :]
-        track2 = data[acqproperties.width:(2 * acqproperties.width) - 1, :, :, :]
+        track1 = data[:, :, :, 0:acqproperties.width - 1]
+        track2 = data[:, :, :, acqproperties.width:(2 * acqproperties.width) - 1]
 
         with h5py.File(path, 'w') as datafile:
             filegroup = datafile.create_group('sipcars')
@@ -42,6 +42,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
             filegroup.attrs['X Pixels'] = acqproperties.xpixels
             filegroup.attrs['Y Pixels'] = acqproperties.ypixels
             filegroup.attrs['Z Pixels'] = acqproperties.zpixels
+            filegroup.attrs['XY Step Size'] = acqproperties.xystep
+            filegroup.attrs['Z Step Size'] = acqproperties.zstep
             filegroup.attrs['Time and Date'] = str(
                 time.strftime('%d/%m/%Y') + ':' + time.strftime("%H:%M:%S"))
 

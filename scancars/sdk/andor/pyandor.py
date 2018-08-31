@@ -3,7 +3,7 @@
 import ctypes
 import numpy as np
 
-# Loading the Andor dll driver
+# Loading the Andor dll driver from the Andor SDK library (ignore other souorces of the driver)
 dll = ctypes.cdll.LoadLibrary("C:\\Program Files\\Andor SDK\\atmcd64d")
 
 
@@ -194,7 +194,7 @@ class Cam:
             error = dll.GetAcquiredData(ctypes.pointer(cimage), self.dim*numscans)
 
             self.imagearray = np.asarray(cimage[:])
-            self.imagearray = self.imagearray[::-1]
+            # self.imagearray = self.imagearray[::-1]
             return ERROR_CODE[error]
 
         elif acqtype == 'image':
