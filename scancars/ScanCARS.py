@@ -61,8 +61,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.acquiring = False
         self.spectralacquiring = False
         self.hyperacquiring = False
-        self.camtrackacquiring = False
         self.gettingtemp = False
+        self.grating = False
 
         # Storing exposure times
         self.exposuretime = float(self.spectralRequiredTime.text())
@@ -103,6 +103,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.buttonDialogsDifference.clicked.connect(lambda: self.dialog_diff())
         self.buttonDialogsSum.clicked.connect(lambda: self.dialog_sum())
         self.buttonGratingUpdate.clicked.connect(lambda: self.grating_update())
+        self.buttonGratingState.clicked.connect(lambda: self.grating_state())
         self.buttonCamtrackUpdate.clicked.connect(lambda: self.camtracks_update())
         self.buttonCamtrackView.clicked.connect(lambda: self.camtracks_view())
         self.buttonSpectralUpdate.clicked.connect(lambda: self.spectralacq_update())
@@ -178,9 +179,14 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             self.finished_grating_query()
 
             post.eventlog(self, 'Isoplane: Connected.')
+            self.buttonGratingState.setText('Turn Off')
+            self.buttonGratingState.setStyleSheet('background: #121212')
+            self.grating = True
 
         except pyvisa.errors.VisaIOError as error:
             self.buttonGratingUpdate.setDisabled(True)
+            self.buttonGratingState.setDisabled(True)
+            self.grating = False
             post.eventlog(self, 'Isoplane: Could not connect. Possibly being used in another process.')
             print(error)
 
@@ -380,6 +386,19 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         if message is not None:
             post.eventlog(self, message)
+
+    def grating_state(self):
+        if self.grating is True:
+            self.isoplane.close()
+
+            post.eventlog(self, 'Isoplane: Disconnected.')
+            self.buttonGratingState.setText('Turn On')
+            self.buttonGratingState.setStyleSheet('background: #121212')
+            self.buttonGratingUpdate.setDisabled(True)
+            self.grating = False
+
+        elif self.grating is False:
+            self.initialize_isoplane()
 
     # CamTracks: Defining methods
     def camtracks_update(self):
