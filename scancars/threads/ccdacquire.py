@@ -43,6 +43,6 @@ class CcdAcquireThread(QtCore.QRunnable):
             self.ui.andor.setshutter(1, 2, 0, 0)  # Ensuring the shutter is closed
             self.ui.andor.setreadmode(2)  # Setting the read mode to Random Tracks
             self.ui.andor.setrandomtracks(2, randtrack)
-            self.ui.andor.setexposuretime(self.exposuretime)
+            self.ui.andor.setexposuretime(self.ui.exposuretime)
 
             time.sleep(1)
