@@ -461,7 +461,14 @@ Plot</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_7" rowstretch="80,20" columnstretch="50,50">
            <item row="1" column="0" colspan="2">
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,0">
+             <item>
+              <widget class="QPushButton" name="buttonHyperspectralTime">
+               <property name="text">
+                <string>Update Est. Time</string>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QPushButton" name="buttonHyperspectralStart">
                <property name="text">
@@ -719,13 +726,6 @@ Plot</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="QRadioButton" name="grating600">
-             <property name="text">
-              <string>600 lines/mm</string>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="0">
             <widget class="QLabel" name="label_20">
              <property name="text">
@@ -777,6 +777,13 @@ Plot</string>
             <widget class="QPushButton" name="buttonGratingState">
              <property name="text">
               <string>Turn Off</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QRadioButton" name="grating600">
+             <property name="text">
+              <string>600 lines/mm</string>
              </property>
             </widget>
            </item>
@@ -935,6 +942,13 @@ Plot</string>
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen_Data_Folder"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <action name="actionOpen_Hyperspectral_Viewer">
    <property name="text">
@@ -959,6 +973,11 @@ Plot</string>
     <string>Exit</string>
    </property>
   </action>
+  <action name="actionOpen_Data_Folder">
+   <property name="text">
+    <string>Open Data Folder</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -973,10 +992,10 @@ Plot</string>
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>specwinMain</tabstop>
   <tabstop>buttonMainStartAcquisition</tabstop>
   <tabstop>mainStatus</tabstop>
   <tabstop>buttonMainShutdown</tabstop>
-  <tabstop>specwinMain</tabstop>
   <tabstop>camtrackLower1</tabstop>
   <tabstop>camtrackUpper1</tabstop>
   <tabstop>camtrackLower2</tabstop>
@@ -1003,12 +1022,14 @@ Plot</string>
   <tabstop>hyperspectralZStep</tabstop>
   <tabstop>hyperspectralZPix</tabstop>
   <tabstop>hyperspectralEstTime</tabstop>
+  <tabstop>buttonHyperspectralTime</tabstop>
   <tabstop>buttonHyperspectralStart</tabstop>
   <tabstop>grating150</tabstop>
   <tabstop>grating600</tabstop>
   <tabstop>gratingRequiredWavelength</tabstop>
   <tabstop>gratingActualWavelength</tabstop>
   <tabstop>buttonGratingUpdate</tabstop>
+  <tabstop>buttonGratingState</tabstop>
   <tabstop>imagewinMain</tabstop>
   <tabstop>specwinPrevious</tabstop>
  </tabstops>
