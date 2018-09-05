@@ -15,7 +15,8 @@ e.g. deactivate all buttons apart from the main Shutdown pushbutton:
 def deactivate_buttons(self, main_start_acq_stat=False, main_shutdown_stat=False, cameratemp_cooler_stat=False,
                        spectrawin_sum_stat=False, spectrawin_single_stat=False, grating_update_stat=False,
                        cameraoptions_openimage_stat=False, cameraoptions_update_stat=False,
-                       spectralacq_start_stat=False, spectralacq_update_stat=False, hyperacq_start_stat=False):
+                       spectralacq_start_stat=False, spectralacq_update_stat=False, hyperacq_start_stat=False,
+                       hyperacq_update_stat=False, grating_state_stat=False):
 
     self.buttonMainStartAcquisition.setEnabled(main_start_acq_stat)
     self.buttonMainShutdown.setEnabled(main_shutdown_stat)
@@ -28,12 +29,15 @@ def deactivate_buttons(self, main_start_acq_stat=False, main_shutdown_stat=False
     self.buttonSpectralStart.setEnabled(spectralacq_start_stat)
     self.buttonSpectralUpdate.setEnabled(spectralacq_update_stat)
     self.buttonHyperspectralStart.setEnabled(hyperacq_start_stat)
+    self.buttonHyperspectralTime.setEnabled(hyperacq_update_stat)
+    self.buttonGratingState.setEnabled(grating_state_stat)
 
 
 def activate_buttons(self, main_start_acq_stat=True, main_shutdown_stat=True, cameratemp_cooler_stat=True,
                      spectrawin_sum_stat=True, spectrawin_single_stat=True, grating_update_stat=True,
                      cameraoptions_openimage_stat=True, cameraoptions_update_stat=True,
-                     spectralacq_start_stat=True, spectralacq_update_stat=True, hyperacq_start_stat=True):
+                     spectralacq_start_stat=True, spectralacq_update_stat=True, hyperacq_start_stat=True,
+                     hyperacq_update_stat=True, grating_state_stat=True):
 
     self.buttonMainStartAcquisition.setEnabled(main_start_acq_stat)
     self.buttonMainShutdown.setEnabled(main_shutdown_stat)
@@ -46,3 +50,5 @@ def activate_buttons(self, main_start_acq_stat=True, main_shutdown_stat=True, ca
     self.buttonSpectralStart.setEnabled(spectralacq_start_stat)
     self.buttonSpectralUpdate.setEnabled(spectralacq_update_stat)
     self.buttonHyperspectralStart.setEnabled(hyperacq_start_stat)
+    self.buttonHyperspectralTime.setEnabled(hyperacq_update_stat)
+    self.buttonGratingState.setEnabled(grating_state_stat)
