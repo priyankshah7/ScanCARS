@@ -5,6 +5,7 @@ import datetime
 import configparser
 import ctypes
 import pyvisa
+import subprocess
 import nidaqmx as daq
 import numpy as np
 from PyQt5 import QtCore
@@ -14,7 +15,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QStyleFactor
 
 from scancars.gui import dialogs
 from scancars.gui.forms import main
-from scancars.threads import grating, liveacquire, spectralacquire, monitortemp
+from scancars.threads import grating, liveacquire, spectralacquire, hyperacquire, monitortemp, ccdacquire
 from scancars.utils import post, toggle, savetofile
 from scancars.sdk.andor import pyandor
 
@@ -59,10 +60,16 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
         # Variables for acquisition and temp. monitoring loops
         self.acquiring = False
+        self.ccdacquiring = False
         self.spectralacquiring = False
         self.hyperacquiring = False
+        self.acquisition_cancelled = False
         self.gettingtemp = False
         self.grating = False
+
+        # Data variables
+        self.spectral_data = None
+        self.hyperspectral_data = None
 
         # Storing exposure times
         self.exposuretime = float(self.spectralRequiredTime.text())
@@ -73,12 +80,14 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.winspecsum.setWindowTitle('Sum Track Spectrum')
         self.winspecdiff = dialogs.SPECDIFF()
         self.winspecdiff.setWindowTitle('Difference Track Spectrum')
+        self.winccdlive = dialogs.CCDLIVE()
+        self.winccdlive.setWindowTitle('Live CCD View')
 
         # Plot/Image settings
         self.specwinMain.plotItem.showGrid(x=True, y=True, alpha=0.2)
         self.specwinPrevious.plotItem.showGrid(x=True, y=True, alpha=0.2)
-        self.specwinMain.setXRange(-10, 530, padding=0)
-        self.specwinPrevious.setXRange(-10, 530, padding=0)
+        self.specwinMain.setXRange(-10, 1030, padding=0)
+        self.specwinPrevious.setXRange(-10, 1030, padding=0)
         self.specwinMain.plotItem.setMenuEnabled(False)
         self.specwinPrevious.plotItem.setMenuEnabled(False)
         self.imagewinMain.ui.histogram.setMinimumWidth(10)
@@ -96,6 +105,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.diffdialogplot = self.winspecdiff.specwinDiff.plot(pen=(25, 85, 120), name='difference')
         self.previousplot = self.specwinPrevious.plot(pen='w', name='previousdiff')
 
+        # Hyperspectral imaging settings
+        self.hyperacq_update_time()
+
         # Connecting buttons to methods
         self.buttonMainStartAcquisition.clicked.connect(lambda: self.main_startacq())
         self.buttonMainShutdown.clicked.connect(lambda: self.main_shutdown())
@@ -109,6 +121,8 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.buttonSpectralUpdate.clicked.connect(lambda: self.spectralacq_update())
         self.buttonSpectralStart.clicked.connect(lambda: self.spectralacq_start())
         self.buttonHyperspectralStart.clicked.connect(lambda: self.hyperacq_start())
+        self.buttonHyperspectralTime.clicked.connect(lambda: self.hyperacq_update_time())
+        self.actionOpen_Data_Folder.triggered.connect(lambda: self.open_data_folder())
 
         # Initialising the camera
         self.initialize_andor()
@@ -121,18 +135,20 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # Misc
         self.progressbar.setValue(0)
 
-    def __del__(self):
-        pass
+    # Menu functions
+    @staticmethod
+    def open_data_folder():
+        subprocess.Popen('explorer "C:\\Users\\CARS\\Documents\\SIPCARS\\Data"')
 
     # Initialize: defining methods
     def initialize_andor(self):
         toggle.deactivate_buttons(self)
 
         # Storing the positions of the random tracks in an array
-        randtrack = np.array([int(float(self.camtrackLower1.text())),
-                              int(float(self.camtrackUpper1.text())),
-                              int(float(self.camtrackLower2.text())),
-                              int(float(self.camtrackUpper2.text()))])
+        randtrack = np.array([int(self.camtrackLower1.text()),
+                              int(self.camtrackUpper1.text()),
+                              int(self.camtrackLower2.text()),
+                              int(self.camtrackUpper2.text())])
 
         errorinitialize = self.andor.initialize()   # Initializing the detector
         if errorinitialize != 'DRV_SUCCESS':
@@ -231,12 +247,10 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         # If there's a live acquisition taking place, then stop it
         elif self.acquiring is True:
             self.acquiring = False
-            self.andor.setshutter(1, 2, 0, 0)
             acquirethread.stop()
             toggle.activate_buttons(self)
             post.status(self, '')
             self.buttonMainStartAcquisition.setText('Start Acquisition')
-            self.andor.setshutter(1, 2, 0, 0)
 
     def main_shutdown(self):
         toggle.deactivate_buttons(self)
@@ -259,9 +273,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         self.andor.gettemperature()
 
         # If the cooler is off, proceed to shutdown the camera
-        if self.andor.coolerstatus == 0 and self.andor.temperature > -20:
+        if self.andor.coolerstatus == 0: #and self.andor.temperature > -20: # TODO Temp. whilst aligning
             self.andor.shutdown()
-            self.isoplane.close()
+            # self.isoplane.close()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             post.status(self, 'ScanCARS can now be safely closed.')
@@ -281,7 +295,7 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
                 QCoreApplication.processEvents()
 
             self.andor.shutdown()
-            self.isoplane.close()
+            # self.isoplane.close()
 
             post.eventlog(self, 'ScanCARS can now be safely closed.')
             post.status(self, 'ScanCARS can now be safely closed.')
@@ -336,6 +350,9 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
 
     def dialog_diff(self):
         self.winspecdiff.show()
+
+    def dialog_ccd(self):
+        self.winccdlive.show()
 
     # Grating: defining methods
     def grating_update(self):
@@ -419,38 +436,39 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
             post.eventlog(self, 'Andor: Random track positions updated.')
 
     def camtracks_view(self):
-        if self.camtrackacquiring is False:
-            # Setting the read mode to image to get a full image from the CCD chip
-            self.andor.setacquisitionmode(1)
-            self.andor.setreadmode(4)
-            self.andor.setexposuretime(0.1)
+        # Creating instance of the live ccd chip thread
+        ccdacquire_thread = ccdacquire.CcdAcquireThread(self)
 
-            cimage = (ctypes.c_long * self.andor.height * self.andor.width)()
-
+        # If there's no current live ccd view taking place, then start one
+        if self.ccdacquiring is False:
+            self.ccdacquiring = True
+            self.dialog_ccd()
             self.andor.setshutter(1, 1, 0, 0)
-            self.camtrackacquiring = True
-            while self.camtrackacquiring:
-                self.andor.startacquisition()
-                self.andor.waitforacquisition()
-                self.andor.getacquireddata(cimage, numscans=1, acqtype='image')
+            toggle.deactivate_buttons(self, cameraoptions_openimage_stat=True)
+            post.status(self, 'Live CCD view...')
+            # self.buttonCamtrackView.setText('Stop Live View')
 
-                self.imagewinMain.clear()
-                self.imagewinMain.setImage(self.andor.imagearray)
+            # Camera parameters for live ccd acquisition
+            self.andor.freeinternalmemory()
+            self.andor.setreadmode(4)
+            self.andor.setacquisitionmode(1)
+            self.andor.setexposuretime(self.exposuretime)
 
+            time.sleep(1)
+
+            # Starting live ccd acquisition thread and connecting to plot function
+            self.threadpool.start(ccdacquire_thread)
+            ccdacquire_thread.signals.dataLiveAcquire.connect(lambda: plot())
+
+            def plot():
+                self.winccdlive.ccdliveWin.setImage(self.andor.imagearray)
                 QCoreApplication.processEvents()
 
-        elif self.camtrackacquiring is True:
-            self.camtrackacquiring = False
-            # Storing the positions of the random tracks in an array
-            randtrack = np.array([int(float(self.camtrackLower1.text())),
-                                  int(float(self.camtrackUpper1.text())),
-                                  int(float(self.camtrackLower2.text())),
-                                  int(float(self.camtrackUpper2.text()))])
-
-            self.andor.setshutter(1, 2, 0, 0)  # Ensuring the shutter is closed
-            self.andor.setreadmode(2)  # Setting the read mode to Random Tracks
-            self.andor.setrandomtracks(2, randtrack)
-            self.andor.setexposuretime(self.exposuretime)
+        elif self.ccdacquiring is True:
+            self.ccdacquiring = False
+            ccdacquire_thread.stop()
+            toggle.activate_buttons(self)
+            post.status(self, '')
 
     # SpectralAcq: Defining methods
     def spectralacq_update(self):
@@ -464,127 +482,233 @@ class ScanCARS(QMainWindow, main.Ui_MainWindow):
         post.eventlog(self, 'Andor: Exposure time set to ' + str(self.exposuretime) + 's')
 
     def spectralacq_start(self):
-        toggle.deactivate_buttons(self)
-        self.spectralacquiring = True
-        post.status(self, 'Spectral acquisition in progress...')
-        self.progressbar.setValue(0)
-
-        # Setting acquisition parameters
-        exposuretime = float(self.exposuretime)
+        # Threaded...#
+        # Creating an instance of the spectral acquisition thread
         frames = int(self.spectralFrames.text())
         darkcount = int(self.spectralBackgroundFrames.text())
+        spectralthread = spectralacquire.SpectralAcquireThread(self, frames, darkcount)
 
-        # Dark acquisition
-        self.andor.setshutter(1, 2, 0, 0)
-        self.andor.setexposuretime(exposuretime)
-        self.andor.setacquisitionmode(1)
-        cimage = (ctypes.c_long * self.andor.dim)()
+        # If there's no acquisition taking place, then start one
+        if self.spectralacquiring is False:
+            self.spectralacquiring = True
+            self.andor.setshutter(1, 1, 0, 0)
+            toggle.deactivate_buttons(self, spectralacq_start_stat=True)
+            post.status(self, 'Spectral acquisition in progress...')
+            self.buttonSpectralStart.setText('Stop Spectral Acquisition')
 
-        time.sleep(2)
-        dark_data = [0] * darkcount
+            # Camera parameters for spectral acquisition
+            self.andor.freeinternalmemory()
+            self.andor.setacquisitionmode(1)
+            self.andor.setexposuretime(self.exposuretime)
 
-        numscan = 0
-        while numscan < darkcount:
-            self.andor.startacquisition()
-            self.andor.waitforacquisition()
-            self.andor.getacquireddata(cimage, 1)
-            dark_data[numscan] = self.andor.imagearray
+            self.spectral_data = [0] * frames
 
-            self.track1plot.setData(self.andor.imagearray[0:self.width-1])
-            self.track2plot.setData(self.andor.imagearray[self.width:(2*self.width)-1])
-            self.diffplot.setData(
-                self.andor.imagearray[self.width:(2*self.width)-1]-self.andor.imagearray[0:self.width-1])
+            time.sleep(1)
 
-            self.progressbar.setValue((numscan + 1) / (darkcount + frames) * 100)
-            numscan += 1
+            def plot_and_store(numscan):
+                self.spectral_data[numscan] = self.andor.imagearray
+                # TODO use spectra_data instead of imagearray following from here
+                self.track1plot.setData(self.andor.imagearray[0:self.width - 1])
+                self.track2plot.setData(self.andor.imagearray[self.width:(2 * self.width) - 1])
+                self.diffplot.setData(
+                    self.andor.imagearray[self.width:(2 * self.width) - 1] - self.andor.imagearray[0:self.width - 1])
 
-            QCoreApplication.processEvents()
+                self.progressbar.setValue((darkcount + numscan + 1) / (darkcount + frames) * 100)
 
-        dark_data = np.asarray(dark_data)
-        dark_data = np.transpose(dark_data)
+                QCoreApplication.processEvents()
 
-        # Spectral acquisition
-        self.andor.setshutter(1, 1, 0, 0)
-        self.andor.setexposuretime(exposuretime)
-        self.andor.setacquisitionmode(1)
-        cimage = (ctypes.c_long * self.andor.dim)()
+            def finished_acquisition():
+                if not self.acquisition_cancelled:
+                    # Processing data
+                    spectral_data = np.asarray(self.spectral_data)
+                    spectral_data = np.transpose(spectral_data)
 
-        time.sleep(2)
-        spectral_data = [0] * frames
+                    acquired_data = np.mean(spectral_data, 1)  # - np.mean(dark_data, 1)
 
-        numscan = 0
-        while numscan < frames:
-            self.andor.startacquisition()
-            self.andor.waitforacquisition()
-            self.andor.getacquireddata(cimage, 1)
-            spectral_data[numscan] = self.andor.imagearray
+                    # Plotting the mean spectrum
+                    self.track1plot.setData(acquired_data[0:self.width - 1])
+                    self.track2plot.setData(acquired_data[self.width:(2 * self.width) - 1])
+                    self.diffplot.setData(acquired_data[self.width:(2 * self.width) - 1] - acquired_data[0:self.width - 1])
 
-            self.track1plot.setData(self.andor.imagearray[0:self.width - 1])
-            self.track2plot.setData(self.andor.imagearray[self.width:(2 * self.width) - 1])
-            self.diffplot.setData(
-                self.andor.imagearray[self.width:(2 * self.width) - 1] - self.andor.imagearray[0:self.width - 1])
+                    self.previousplot.setData(acquired_data[self.width:(2 * self.width) - 1] - acquired_data[0:self.width - 1])
 
-            self.progressbar.setValue((darkcount + numscan + 1) / (darkcount + frames) * 100)
-            numscan += 1
+                    # # Saving the data to file
+                    now = datetime.datetime.now()
+                    newpath = 'C:\\Users\\CARS\\Documents\\SIPCARS\\Data\\' + now.strftime('%Y-%m-%d') + '\\'
+                    if not os.path.exists(newpath):
+                        os.makedirs(newpath)
+                    filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
+                                                           directory=newpath)
 
-            QCoreApplication.processEvents()
+                    if filename[0]:
+                        acqproperties = savetofile.EmptyClass()
+                        acqproperties.width = self.andor.width
+                        acqproperties.time = self.exposuretime
+                        acqproperties.number = frames
 
-        spectral_data = np.asarray(spectral_data)
-        spectral_data = np.transpose(spectral_data)
+                        savetofile.save(acquired_data, str(filename[0]), acqproperties, acqtype='spectral')
 
-        acquired_data = np.mean(spectral_data, 1) - np.mean(dark_data, 1)
+                        self.progressbar.setValue(100)
+                        post.eventlog(self, 'Spectral acquisition saved.')  # TODO Print file name saved to as well
 
-        # # Plotting the mean spectrum
-        self.track1plot.setData(acquired_data[0:self.width - 1])
-        self.track2plot.setData(acquired_data[self.width:(2 * self.width) - 1])
-        self.diffplot.setData(acquired_data[self.width:(2 * self.width) - 1] - acquired_data[0:self.width - 1])
+                    else:
+                        self.progressbar.setValue(100)
+                        post.eventlog(self, 'Acquisition aborted.')
 
-        self.previousplot.setData(acquired_data[self.width:(2 * self.width) - 1] - acquired_data[0:self.width - 1])
+                    # Finishing up UI acquisition call
+                    self.andor.setshutter(1, 2, 0, 0)
+                    post.status(self, '')
+                    self.buttonSpectralStart.setText('Start Spectral Acquisition')
+                    self.progressbar.setValue(0)
+                    toggle.activate_buttons(self)
 
-        # # Saving the data to file
-        now = datetime.datetime.now()
-        newpath = 'C:\\Users\\CARS\\Documents\\SIPCARS\\Data\\' + now.strftime('%Y-%m-%d') + '\\'
-        if not os.path.exists(newpath):
-            os.makedirs(newpath)
-        filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
-                                               directory=newpath)
+                else:
+                    # Finishing up UI acquisition call
+                    self.andor.setshutter(1, 2, 0, 0)
+                    post.status(self, '')
+                    self.progressbar.setValue(0)
+                    self.acquisition_cancelled = False
+                    post.eventlog(self, 'Spectral acquisition aborted.')
+                    self.buttonSpectralStart.setText('Start Spectral Acquisition')
+                    toggle.activate_buttons(self)
 
-        if filename[0]:
-            acqproperties = savetofile.EmptyClass()
-            acqproperties.width = self.andor.width
-            acqproperties.time = exposuretime
-            acqproperties.number = frames
+            # Starting spectral acquisition thread and connecting to plot and store function
+            self.threadpool.start(spectralthread)
+            spectralthread.signals.dataSpectralAcquire.connect(plot_and_store)
+            spectralthread.signals.finishedSpectralAcquire.connect(finished_acquisition)
 
-            savetofile.save(acquired_data, str(filename[0]), acqproperties, acqtype='spectral')
+        elif self.spectralacquiring is True:
+            self.spectralacquiring = False
+            spectralthread.stop()
+            toggle.activate_buttons(self)
+            post.status(self, '')
+            self.buttonSpectralStart.setText('Start Spectral Acquisition')
 
-            self.progressbar.setValue(100)
-            post.eventlog(self, 'Spectral acquisition saved.')  # TODO Print file name saved to as well
-
-        else:
-            self.progressbar.setValue(100)
-            post.eventlog(self, 'Acquisition aborted.')
-
-        # Finishing up UI acquisition call
-        self.andor.setshutter(1, 2, 0, 0)
-        post.status(self, '')
-        self.spectralacquiring = False
-        self.progressbar.setValue(0)
-        toggle.activate_buttons(self)
+        ##############
 
     # HyperspectralAcq: Defining methods
     def hyperacq_start(self):
-        # Storing values of hyperspectral acquisition
-        x_required = self.hyperspectralXPix
-        y_required = self.hyperspectralYPix
-        z_required = self.hyperspectralZPix
+        # Threaded ###
+        # Storing values for hyperspectral acquisition
+        x_required = int(self.hyperspectralXPix.text())
+        y_required = int(self.hyperspectralYPix.text())
+        z_required = int(self.hyperspectralZPix.text())
 
-        xystep_required = self.hyperspectralXYStep
-        zstep_required = self.hyperspectralZStep
+        xystep_voltage = float(self.hyperspectralXYStep.text()) / 20
+        zstep_voltage = float(self.hyperspectralZStep.text()) / 2
 
-        exposuretime = self.hyperspectralRequiredTime
-        background_frames = self.hyperspectralBackgroundFrames
+        exposuretime = float(self.hyperspectralRequiredTime.text())
+        background_frames = int(self.hyperspectralBackgroundFrames.text())
 
-        cimage = (ctypes.c_long * self.andor.dim)()
+        # Creating an instance of the hyperspectral acquisition thread
+        hyperthread = hyperacquire.HyperAcquireThread(self, x_required, y_required, z_required,
+                                                      xystep_voltage, zstep_voltage,
+                                                      exposuretime, background_frames)
+
+        # If there's no acquisition taking place, then start one
+        if self.hyperacquiring is False:
+            self.hyperacquiring = True
+            self.andor.setshutter(1, 1, 0, 0)
+            toggle.deactivate_buttons(self, hyperacq_start_stat=True)
+            post.status(self, 'Hyperspectral acquisition in progress...')
+            self.buttonHyperspectralStart.setText('Stop Hyperspectral Acquisition')
+
+            # Camera parameters for hyperspectral acquisition
+            self.andor.freeinternalmemory()
+            self.andor.setacquisitionmode(1)
+            self.andor.setexposuretime(self.exposuretime)
+
+            width = self.width
+            self.hyperspectral_data = np.zeros((x_required, y_required, z_required, 2*width))
+
+            time.sleep(1)
+
+            def plot_and_store(x_position, y_position, z_position):
+                self.hyperspectral_data[x_position, y_position, z_position, :] = self.andor.imagearray
+
+                self.track1plot.setData(self.andor.imagearray[0:self.width - 1])
+                self.track2plot.setData(self.andor.imagearray[self.width:(2 * self.width) - 1])
+                self.diffplot.setData(
+                    self.andor.imagearray[self.width:(2 * self.width) - 1] - self.andor.imagearray[0:self.width - 1])
+
+                self.imagewinMain.setImage(np.squeeze(np.mean(
+                    self.hyperspectral_data[:, :, z_position, self.width:(2 * self.width) - 1] - self.hyperspectral_data[:, :, z_position, 0:self.width - 1], 2)))
+
+                # TODO Progress bar
+
+                QCoreApplication.processEvents()
+
+            def finished_acquisition():
+                if not self.acquisition_cancelled:
+                    # Saving the data to file
+                    now = datetime.datetime.now()
+                    newpath = 'C:\\Users\\CARS\\Documents\\SIPCARS\\Data\\' + now.strftime('%Y-%m-%d') + '\\'
+                    if not os.path.exists(newpath):
+                        os.makedirs(newpath)
+                    filename = QFileDialog.getSaveFileName(caption='File Name', filter='H5 (*.h5)',
+                                                           directory=newpath)
+
+                    if filename[0]:
+                        acqproperties = savetofile.EmptyClass()
+                        acqproperties.width = self.andor.width
+                        acqproperties.time = exposuretime
+                        acqproperties.xpixels = x_required
+                        acqproperties.ypixels = y_required
+                        acqproperties.zpixels = z_required
+                        acqproperties.xystep = float(self.hyperspectralXYStep.text())
+                        acqproperties.zstep = float(self.hyperspectralZStep.text())
+
+                        savetofile.save(self.hyperspectral_data, str(filename[0]), acqproperties, acqtype='hyperspectral')
+
+                        # TODO progress bar
+                        post.eventlog(self, 'Hyperspectral acquisition saved')
+
+                    else:
+                        # TODO progress bar
+                        post.eventlog(self, 'Acquisition aborted.')
+
+                    # Finishing up UI acquisition call
+                    self.andor.setshutter(1, 2, 0, 0)
+                    post.status(self, '')
+                    self.buttonHyperspectralStart.setText('Start Hyperspectral Acquisition')
+                    self.progressbar.setValue(0)
+                    toggle.activate_buttons(self)
+
+                else:
+                    # Finishing up UI acquisition call
+                    self.andor.setshutter(1, 2, 0, 0)
+                    post.status(self, '')
+                    self.progressbar.setValue(0)
+                    self.acquisition_cancelled = False
+                    post.eventlog(self, 'Hyperspectral acquisition aborted.')
+                    self.buttonHyperspectralStart.setText('Start Hyperspectral Acquisition')
+                    toggle.activate_buttons(self)
+
+            # Starting hyperspectral acquisition thread and connecting to plot and store function
+            self.threadpool.start(hyperthread)
+            hyperthread.signals.dataHyperAcquire.connect(plot_and_store)
+            hyperthread.signals.finishedHyperAcquire.connect(finished_acquisition)
+
+        elif self.hyperacquiring is True:
+            self.hyperacquiring = False
+            hyperthread.stop()
+            toggle.activate_buttons(self)
+            post.status(self, '')
+            self.buttonHyperspectralStart.setText('Start Hyperspectral Acquisition')
+
+        ##############
+
+    def hyperacq_update_time(self):
+        x_required = int(self.hyperspectralXPix.text())
+        y_required = int(self.hyperspectralYPix.text())
+        z_required = int(self.hyperspectralZPix.text())
+
+        exposuretime = float(self.hyperspectralRequiredTime.text())
+
+        closed_multiplicative_factor = 12
+
+        time_est_seconds = x_required * y_required * z_required * exposuretime * closed_multiplicative_factor
+        self.hyperspectralEstTime.setText(str(time_est_seconds / 60))
 
 
 def main():
