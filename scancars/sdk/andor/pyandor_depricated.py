@@ -109,7 +109,7 @@ class Cam:
         This will only take effect if the acquisition mode is either
         Accumulate or Kinetic Series.
         """
-        error = dll.SetNumberKinetics(number)
+        error = dll.SetNumberAccumulations(number)
         return ERROR_CODE[error]
 
     @staticmethod
