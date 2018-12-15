@@ -1,0 +1,15 @@
+cycler==0.10.0
+Cython==0.29
+h5py==2.8.0
+kiwisolver==1.0.1
+matplotlib==3.0.2
+nidaqmx==0.5.7
+numpy==1.15.4
+pyparsing==2.3.0
+PyQt5==5.11.3
+PyQt5-sip==4.19.13
+pyqtgraph==0.10.0
+python-dateutil==2.7.5
+PyVISA==1.9.1
+scipy==1.1.0
+six==1.11.0
