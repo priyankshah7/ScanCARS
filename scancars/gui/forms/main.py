@@ -468,7 +468,10 @@ class Ui_MainWindow(object):
         self.actionExit.setObjectName("actionExit")
         self.actionOpen_Data_Folder = QtWidgets.QAction(MainWindow)
         self.actionOpen_Data_Folder.setObjectName("actionOpen_Data_Folder")
+        self.actionOpen_Hyperspectral_View = QtWidgets.QAction(MainWindow)
+        self.actionOpen_Hyperspectral_View.setObjectName("actionOpen_Hyperspectral_View")
         self.menuFile.addAction(self.actionOpen_Data_Folder)
+        self.menuFile.addAction(self.actionOpen_Hyperspectral_View)
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -567,5 +570,6 @@ class Ui_MainWindow(object):
         self.actionOpen_Difference_Spectrum.setText(_translate("MainWindow", "Open Difference Spectrum"))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
         self.actionOpen_Data_Folder.setText(_translate("MainWindow", "Open Data Folder"))
+        self.actionOpen_Hyperspectral_View.setText(_translate("MainWindow", "Open Hyperspectral Viewer"))
 
 from pyqtgraph import ImageView, PlotWidget

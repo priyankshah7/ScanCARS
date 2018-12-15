@@ -947,6 +947,7 @@ Plot</string>
      <string>File</string>
     </property>
     <addaction name="actionOpen_Data_Folder"/>
+    <addaction name="actionOpen_Hyperspectral_View"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -976,6 +977,11 @@ Plot</string>
   <action name="actionOpen_Data_Folder">
    <property name="text">
     <string>Open Data Folder</string>
+   </property>
+  </action>
+  <action name="actionOpen_Hyperspectral_View">
+   <property name="text">
+    <string>Open Hyperspectral Viewer</string>
    </property>
   </action>
  </widget>
