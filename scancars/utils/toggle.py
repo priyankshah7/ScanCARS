@@ -31,6 +31,10 @@ def deactivate_buttons(self, main_start_acq_stat=False, main_shutdown_stat=False
     self.buttonHyperspectralStart.setEnabled(hyperacq_start_stat)
     self.buttonHyperspectralTime.setEnabled(hyperacq_update_stat)
     self.buttonGratingState.setEnabled(grating_state_stat)
+    self.buttonGain.setEnabled(False)
+    self.buttonUserOpen.setEnabled(False)
+    self.buttonUserChange.setEnabled(False)
+    self.dialGain.setEnabled(False)
 
 
 def activate_buttons(self, main_start_acq_stat=True, main_shutdown_stat=True, cameratemp_cooler_stat=True,
@@ -47,6 +51,11 @@ def activate_buttons(self, main_start_acq_stat=True, main_shutdown_stat=True, ca
     self.buttonGratingUpdate.setEnabled(grating_update_stat)
     self.buttonCamtrackView.setEnabled(cameraoptions_openimage_stat)
     self.buttonCamtrackUpdate.setEnabled(cameraoptions_update_stat)
+    self.buttonGain.setEnabled(True)
+    self.buttonUserOpen.setEnabled(True)
+    self.buttonUserChange.setEnabled(True)
+    self.dialGain.setEnabled(True)
+
     self.buttonSpectralStart.setEnabled(spectralacq_start_stat)
     self.buttonSpectralUpdate.setEnabled(spectralacq_update_stat)
     self.buttonHyperspectralStart.setEnabled(hyperacq_start_stat)

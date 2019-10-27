@@ -5,7 +5,7 @@ sys.setrecursionlimit(5000)
 block_cipher = None
 
 
-a = Analysis(['scancars.py'],
+a = Analysis(['ScanCARS.py'],
              pathex=['C:\\Users\\CARS\\Documents\\CARS Software\\ScanCARS\\scancars'],
              binaries=[],
              datas=[],

@@ -27,6 +27,9 @@ class LiveAcquireThread(QtCore.QRunnable):
         while self.ui.acquiring:
             self.ui.andor.startacquisition()
             self.ui.andor.waitforacquisition()
+            # getstatus = self.ui.andor.getstatus()
+            # while getstatus == 'DRV_ACQUIRING':
+            #     getstatus = self.ui.andor.getstatus()
             self.ui.andor.getacquireddata(self.cimage)
 
             self.signals.dataLiveAcquire.emit()

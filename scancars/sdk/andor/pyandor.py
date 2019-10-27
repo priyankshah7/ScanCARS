@@ -519,6 +519,18 @@ class Cam:
         error = dll.WaitForAcquisition()
         return ERROR_CODE[error]
 
+    @staticmethod
+    def setemccdgainmode(mode):
+        """ Set EMCCD Gain Mode"""
+        error = dll.SetEMGainMode(mode)
+        return ERROR_CODE[error]
+
+    @staticmethod
+    def setemccdgain(gain):
+        """ Set EMCCD Gain """
+        error = dll.SetEMCCDGain(gain)
+        return ERROR_CODE[error]
+
 
 ERROR_CODE = {
     20001: "DRV_ERROR_CODES",
