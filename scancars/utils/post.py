@@ -8,5 +8,4 @@ def status(self, message):
 
 def eventlog(self, message):
     self.eventLogger.appendPlainText('(' + time.strftime("%H:%M:%S") + ')' + ' - ' + message)
-
-
+    self.eventLogger.ensureCursorVisible()

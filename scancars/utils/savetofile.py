@@ -35,6 +35,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
 
             filegroup.create_dataset('track1', data=track1)
             filegroup.create_dataset('track2', data=track2)
+            filegroup.create_dataset('raw_track1', data=raw_data1)
+            filegroup.create_dataset('raw_track2', data=raw_data2)
             filegroup.create_dataset('track1_min', data=track1_min)
             filegroup.create_dataset('track1_max', data=track1_max)
             filegroup.create_dataset('track2_min', data=track2_min)
@@ -46,7 +48,8 @@ def save(data, path, acqproperties, acqtype='spectral'):
             filegroup.attrs['Exposure Time'] = acqproperties.time
             filegroup.attrs['Number of Acquisitions'] = acqproperties.number
             filegroup.attrs['Time and Date'] = str(
-                time.strftime('%d/%m/%Y') + ':' + time.strftime("%H:%M:%S"))
+                time.strftime('%d/%m/%Y') + ':' + time.strftime("%H:%M:%S")
+            )
 
     elif acqtype == 'hyperspectral':
         track1 = data[:, :, :, 0:acqproperties.width - 1]

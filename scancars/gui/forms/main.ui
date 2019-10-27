@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1468</width>
+    <width>1489</width>
     <height>773</height>
    </rect>
   </property>
@@ -33,55 +33,6 @@
     <property name="bottomMargin">
      <number>15</number>
     </property>
-    <item row="1" column="1" colspan="2">
-     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="10,80,10">
-      <item>
-       <widget class="QPushButton" name="buttonMainStartAcquisition">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Start Acquisition</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="mainStatus">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="buttonMainShutdown">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Shut Down</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
     <item row="3" column="1" colspan="2">
      <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="45,55">
       <item>
@@ -432,22 +383,38 @@
         <item row="1" column="6">
          <widget class="QGroupBox" name="groupBox">
           <property name="title">
-           <string>Spectra Dialogs</string>
+           <string>Camera Gain</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_9">
            <item row="0" column="0">
-            <widget class="QPushButton" name="buttonDialogsDifference">
-             <property name="text">
-              <string>Difference
-Plot</string>
+            <widget class="QDial" name="dialGain">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximum">
+              <number>300</number>
+             </property>
+             <property name="value">
+              <number>0</number>
+             </property>
+             <property name="invertedAppearance">
+              <bool>false</bool>
+             </property>
+             <property name="wrapping">
+              <bool>false</bool>
+             </property>
+             <property name="notchesVisible">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QPushButton" name="buttonDialogsSum">
+            <widget class="QPushButton" name="buttonGain">
              <property name="text">
-              <string>Sum
-Plot</string>
+              <string>0: Update</string>
              </property>
             </widget>
            </item>
@@ -793,8 +760,56 @@ Plot</string>
         <item row="3" column="6">
          <widget class="QGroupBox" name="groupBox_2">
           <property name="title">
-           <string>Plot Tools</string>
+           <string>User Details</string>
           </property>
+          <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
+           <item>
+            <widget class="QLineEdit" name="userName">
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="userDropdown">
+             <property name="modelColumn">
+              <number>0</number>
+             </property>
+             <item>
+              <property name="text">
+               <string>Guest</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Priyank</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Tao</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonUserChange">
+             <property name="text">
+              <string>Change User</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonUserOpen">
+             <property name="text">
+              <string>Open Folder</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
         <item row="1" column="4">
@@ -900,6 +915,81 @@ Plot</string>
       </item>
      </layout>
     </item>
+    <item row="1" column="1" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="10,10,70,5,5">
+      <item>
+       <widget class="QPushButton" name="buttonMainStartAcquisition">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>Start Acquisition</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonMainShutdown">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Shut Down</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="mainStatus">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonDialogsDifference">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Difference Plot</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonDialogsSum">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Sum Plot</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
     <item row="0" column="1" colspan="2">
      <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="95">
       <item>
@@ -938,7 +1028,7 @@ Plot</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1468</width>
+     <width>1489</width>
      <height>21</height>
     </rect>
    </property>
@@ -989,7 +1079,7 @@ Plot</string>
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph</header>
+   <header location="global">pyqtgraph</header>
   </customwidget>
   <customwidget>
    <class>ImageView</class>
@@ -1001,7 +1091,6 @@ Plot</string>
   <tabstop>specwinMain</tabstop>
   <tabstop>buttonMainStartAcquisition</tabstop>
   <tabstop>mainStatus</tabstop>
-  <tabstop>buttonMainShutdown</tabstop>
   <tabstop>camtrackLower1</tabstop>
   <tabstop>camtrackUpper1</tabstop>
   <tabstop>camtrackLower2</tabstop>
@@ -1017,8 +1106,6 @@ Plot</string>
   <tabstop>cameratempRequiredTemp</tabstop>
   <tabstop>cameratempActualTemp</tabstop>
   <tabstop>buttonCameratempCooler</tabstop>
-  <tabstop>buttonDialogsDifference</tabstop>
-  <tabstop>buttonDialogsSum</tabstop>
   <tabstop>eventLogger</tabstop>
   <tabstop>hyperspectralRequiredTime</tabstop>
   <tabstop>hyperspectralBackgroundFrames</tabstop>
