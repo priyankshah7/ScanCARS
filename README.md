@@ -1,9 +1,9 @@
 # ScanCARS
 
-*Author: Priyank Shah* <br />
-*Author email: priyank.shah@kcl.ac.uk* <br />
-*Institution: King's College London* <br />
-*Description: Hyperspectral image acquisition software*
+ScanCARS is a hardware-control and data acquisition software program created to acquire 
+hyperspectral data. More specifically, the software is used to acquire spectral 
+interferometric polarisation coherent anti-Stokes Raman spectroscopy 
+([SIPCARS](https://doi.org/10.1002/jrs.5576)) signals.
 
 ### Description
 This GUI software is built to acquire hyperspectral
